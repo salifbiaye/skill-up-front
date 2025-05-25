@@ -5,16 +5,16 @@ export interface Note {
   createdAt: string;
   updatedAt?: string;
   hasAiSummary: boolean;
-  relatedObjective?: string;
-  relatedTaskId?: string;
+  goalId?: string;
+  taskId?: string;
   relatedTaskTitle?: string;
 }
 
 export interface CreateNoteInput {
   title: string;
   content: string;
-  relatedObjective?: string;
-  relatedTaskId?: string;
+  goalId?: string;
+  taskId?: string;
 }
 
 export interface UpdateNoteInput extends Partial<CreateNoteInput> {

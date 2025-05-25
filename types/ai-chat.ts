@@ -7,6 +7,7 @@ export interface ChatMessage {
   metadata?: {
     noteId?: string;
     noteTitle?: string;
+    noteContent?: string;
     notes?: Array<{ id: string; title: string; content?: string }>;
     action?: "summarize" | "review" | "list";
   };
@@ -37,6 +38,7 @@ export interface SendMessageInput {
   metadata?: {
     noteId?: string;
     noteTitle?: string;
+    noteContent?: string;
     notes?: Array<{ id: string; title: string; content?: string }>;
     action?: "summarize" | "review" | "list";
   };

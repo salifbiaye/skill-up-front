@@ -11,7 +11,7 @@ export async function GET(
 ) {
   const param = await params
 const id = param.id;
-  const backendUrl = `${API_BASE_URL}/chat-sessions/${id}`;
+  const backendUrl = `${API_BASE_URL}/chat-sessions/${id}/messages`;
   const token = request.cookies.get('auth-token')?.value;
   if (!token) {
     return NextResponse.json(
@@ -42,13 +42,13 @@ const id = param.id;
 /**
  * Gestionnaire de requêtes POST pour les routes de sessions de chat IA
  */
-export async function DELETE(
+export async function POST(
     request: NextRequest,
     { params }: { params: { id: string } }
 ) {
   const param = await params
   const id = param.id;
-  const backendUrl = `${API_BASE_URL}/chat-sessions/${id}`;
+  const backendUrl = `${API_BASE_URL}/chat-sessions/${id}/messages`;
   const token = request.cookies.get('auth-token')?.value;
   if (!token) {
     return NextResponse.json(
@@ -58,7 +58,7 @@ export async function DELETE(
   }
   try {
     const response = await fetch(backendUrl, {
-      method: 'DELETE',
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,

@@ -7,15 +7,24 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
  */
 export async function GET(
     request: NextRequest,
+    { params }: { params: { id: string } }
 ) {
-
-  const backendUrl = `${API_BASE_URL}/chat-sessions`;
-
+  const param = await params
+const id = param.id;
+  const backendUrl = `${API_BASE_URL}/chat-sessions/${id}`;
+  const token = request.cookies.get('auth-token')?.value;
+  if (!token) {
+    return NextResponse.json(
+        { error: "Authentication token missing" },
+        { status: 401 }
+    );
+  }
   try {
     const response = await fetch(backendUrl, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
       },
     });
 
@@ -33,20 +42,27 @@ export async function GET(
 /**
  * Gestionnaire de requêtes POST pour les routes de sessions de chat IA
  */
-export async function POST(
+export async function DELETE(
     request: NextRequest,
-    { params }: { params: { path: string[] } }
+    { params }: { params: { id: string } }
 ) {
-  const path = params.path.join('/');
-  const backendUrl = `${API_BASE_URL}/chat-sessions`;
-
+  const param = await params
+  const id = param.id;
+  const backendUrl = `${API_BASE_URL}/chat-sessions/${id}`;
+  const token = request.cookies.get('auth-token')?.value;
+  if (!token) {
+    return NextResponse.json(
+        { error: "Authentication token missing" },
+        { status: 401 }
+    );
+  }
   try {
     const response = await fetch(backendUrl, {
-      method: 'POST',
+      method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-      },
-      body: await request.text(),
+        'Authorization': `Bearer ${token}`,
+      }
     });
 
     const data = await response.json();

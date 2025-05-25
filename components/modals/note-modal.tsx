@@ -25,8 +25,8 @@ export function NoteModal({ isOpen, onClose, onSubmit, note, title }: NoteModalP
   const [formData, setFormData] = useState<CreateNoteInput>({
     title: note?.title || "",
     content: note?.content || "",
-    relatedObjective: note?.relatedObjective || "",
-    relatedTaskId: note?.relatedTaskId || "",
+    goalId: note?.goalId || "",
+    taskId: note?.taskId || "",
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -101,45 +101,45 @@ export function NoteModal({ isOpen, onClose, onSubmit, note, title }: NoteModalP
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="relatedObjective">Objectif associé (optionnel)</Label>
+            <Label htmlFor="goalId">Objectif associé (optionnel)</Label>
             <Input
-              id="relatedObjective"
-              name="relatedObjective"
-              value={formData.relatedObjective || ""}
+              id="goalId"
+              name="goalId"
+              value={formData.goalId || ""}
               onChange={handleChange}
               placeholder="Objectif associé à cette note"
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="relatedTaskId">Tâche associée (optionnel)</Label>
+            <Label htmlFor="taskId">Tâche associée (optionnel)</Label>
             <select
-              id="relatedTaskId"
-              name="relatedTaskId"
-              value={formData.relatedTaskId || ""}
+              id="taskId"
+              name="taskId"
+              value={formData.taskId || ""}
               onChange={handleChange}
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              disabled={!formData.relatedObjective}
+              disabled={!formData.goalId}
             >
-              <option value="">{!formData.relatedObjective ? "Sélectionnez d'abord un objectif" : "Sélectionner une tâche"}</option>
-              {formData.relatedObjective && tasks
+              <option value="">{!formData.goalId ? "Sélectionnez d'abord un objectif" : "Sélectionner une tâche"}</option>
+              {formData.goalId && tasks
                 .filter(task => 
                   task.status !== "COMPLETED" && 
-                  task.goalId === formData.relatedObjective
+                  task.goalId === formData.goalId
                 )
                 .map((task) => (
                   <option key={task.id} value={task.id}>
                     {task.title}
                   </option>
                 ))}
-              {formData.relatedObjective && tasks.filter(task => 
+              {formData.goalId && tasks.filter(task =>
                 task.status !== "COMPLETED" && 
-                task.goalId === formData.relatedObjective
+                task.goalId === formData.goalId
               ).length === 0 && (
                 <option value="" disabled>Aucune tâche disponible pour cet objectif</option>
               )}
             </select>
-            {!formData.relatedObjective && (
+            {!formData.goalId && (
               <p className="text-xs text-muted-foreground mt-1">Vous devez d'abord sélectionner un objectif pour associer une tâche</p>
             )}
           </div>

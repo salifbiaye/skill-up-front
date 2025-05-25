@@ -4,13 +4,14 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { MoreHorizontal, FileText, Calendar, Target, Sparkles, Trash2, Edit, Eye, CheckSquare } from "lucide-react"
+import { MoreHorizontal, FileText, Calendar, Target, Sparkles, Trash2, Edit, Eye, CheckSquare, BookOpen } from "lucide-react"
 import { EmptyObjectives } from "@/components/empty-states/empty-objectives"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useNotes } from "@/hooks/use-notes"
 import { NoteModalClient } from "@/components/modals/note-modal-client"
 import { Note, UpdateNoteInput, CreateNoteInput } from "@/types/notes"
-import { useTasksStore } from "@/stores"
+import { useTasksStore, useAiChatStore } from "@/stores"
+import { useRouter } from "next/navigation"
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import {toast} from "sonner";
@@ -18,6 +19,8 @@ import {toast} from "sonner";
 export function NotesGrid() {
   const { notes, isLoading, error, deleteNote, updateNote, generateAiSummary } = useNotes()
   const { tasks, fetchTasks } = useTasksStore()
+  const router = useRouter()
+  const { createChatSession, sendMessage } = useAiChatStore()
   
   const [editingNote, setEditingNote] = useState<Note | null>(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -68,6 +71,30 @@ export function NotesGrid() {
       toast("Le résumé IA a été généré avec succès.")
     } catch (error) {
       toast( "Impossible de générer le résumé IA.")
+    }
+  }
+  
+  // Créer une session de chat au nom de la note et rediriger vers la page AI Chat
+  const handleGenerateAiResumeAndRedirect = async (note: Note) => {
+    try {
+      // Créer une nouvelle session avec le titre de la note
+      const sessionTitle = note.title
+      
+      // Créer une nouvelle session de chat
+      const newSession = await createChatSession({
+        title: sessionTitle,
+      })
+      
+      // Forcer la mise à jour des sessions de chat avant de rediriger
+      await useAiChatStore.getState().fetchChatSessions()
+      
+      // Rediriger vers la page de chat avec la nouvelle session
+      router.push(`/ai-chat`)
+      
+      toast.success("Nouvelle session de chat créée")
+    } catch (error) {
+      console.error("Erreur lors de la création de la session avec note:", error)
+      toast.error("Erreur lors de la création de la session de chat")
     }
   }
 
@@ -129,12 +156,11 @@ export function NotesGrid() {
                         <Edit className="h-4 w-4 mr-2" />
                         Modifier
                       </DropdownMenuItem>
-                      {!note.hasAiSummary && (
-                        <DropdownMenuItem onClick={() => handleGenerateAiSummary(note.id)}>
-                          <Sparkles className="h-4 w-4 mr-2" />
-                          Générer un résumé IA
-                        </DropdownMenuItem>
-                      )}
+                    
+                      <DropdownMenuItem onClick={() => handleGenerateAiResumeAndRedirect(note)}>
+                        <BookOpen className="h-4 w-4 mr-2" />
+                        Générer un résumé IA
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setDeleteConfirmNote(note)} className="text-red-500">
                         <Trash2 className="h-4 w-4 mr-2" />
                         Supprimer
@@ -153,16 +179,16 @@ export function NotesGrid() {
                 <Calendar className="h-3 w-3" />
                 <span>Créée le {note.createdAt}</span>
               </div>
-              {note.relatedObjective && (
+              {note.goalId && (
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Target className="h-3 w-3" />
-                  <span>{note.relatedObjective}</span>
+                  <span>{note.goalId}</span>
                 </div>
               )}
-              {note.relatedTaskId && (
+              {note.taskId && (
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <CheckSquare className="h-3 w-3" />
-                  <span>Tâche: {getTaskTitle(note.relatedTaskId)}</span>
+                  <span>Tâche: {getTaskTitle(note.taskId)}</span>
                 </div>
               )}
               <Button 

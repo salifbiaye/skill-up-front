@@ -6,13 +6,15 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { ArrowLeft, Calendar, Download, Edit, Sparkles, Target, Clock, Tag, FileText, Share2 } from "lucide-react"
+import { ArrowLeft, Calendar, Download, Edit, Sparkles, Target, Clock, Tag, FileText, Share2, BookOpen } from "lucide-react"
 import { useNotesStore } from "@/stores"
+import { useAiChatStore } from "@/stores"
 import { Note } from "@/types/notes"
 import { Skeleton } from "@/components/ui/skeleton"
 import { jsPDF } from "jspdf"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
+import { toast } from "sonner"
 import {
   Dialog,
   DialogContent,
@@ -27,6 +29,8 @@ export function NoteDetail() {
   const params = useParams()
   const router = useRouter()
   const getNoteById = useNotesStore(state => state.getNoteById)
+  const createChatSession = useAiChatStore(state => state.createChatSession)
+  const sendChatMessage = useAiChatStore(state => state.sendMessage)
   const [note, setNote] = useState<Note | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -92,6 +96,32 @@ export function NoteDetail() {
 
   const handleGoBack = () => {
     router.back()
+  }
+
+  // Fonction pour créer une session de chat au nom de la note
+  const handleGenerateAiResume = async () => {
+    if (!note) return
+    
+    try {
+      // Créer une nouvelle session avec le titre de la note
+      const sessionTitle = note.title
+      
+      // Créer une nouvelle session de chat
+      const newSession = await createChatSession({
+        title: sessionTitle,
+      })
+      
+      // Forcer la mise à jour des sessions de chat avant de rediriger
+      await useAiChatStore.getState().fetchChatSessions()
+      
+      // Rediriger vers la page de chat avec la nouvelle session
+      router.push(`/ai-chat?session=${newSession.id}`)
+      
+      toast.success("Nouvelle session de chat créée")
+    } catch (error) {
+      console.error("Erreur lors de la création de la session avec note:", error)
+      toast.error("Erreur lors de la création de la session de chat")
+    }
   }
 
   if (isLoading) {
@@ -167,7 +197,11 @@ export function NoteDetail() {
           </Button>
           <Button onClick={handleExportPDF}>
             <Download className="h-4 w-4 mr-2" />
-            Exporter
+            Exporter en PDF
+          </Button>
+          <Button onClick={handleGenerateAiResume}>
+            <BookOpen className="h-4 w-4 mr-2" />
+            Générer un résumé IA
           </Button>
         </div>
       </div>
@@ -240,6 +274,10 @@ export function NoteDetail() {
               <Button variant="outline" size="sm" onClick={() => setIsShareModalOpen(true)}>
                 <Share2 className="h-4 w-4 mr-1" />
                 Partager
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleGenerateAiResume}>
+                <BookOpen className="h-4 w-4 mr-1" />
+                Resume IA
               </Button>
             </div>
           </CardFooter>

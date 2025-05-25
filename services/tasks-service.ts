@@ -41,7 +41,7 @@ export const TasksService = {
   async getTaskById(id: string): Promise<Task | undefined> {
     if (config.useApi) {
       try {
-        const response = await fetch(`${config.baseUrl}${config.endpoints.detail(id)}`);
+        const response = await fetch(`/api/tasks/${id}`);
         if (!response.ok) {
           throw new Error("Erreur lors de la récupération de la tâche");
         }
@@ -173,7 +173,7 @@ export const TasksService = {
   async deleteTask(id: string): Promise<boolean> {
     if (config.useApi) {
       try {
-        const response = await fetch(`${config.baseUrl}${config.endpoints.detail(id)}`, {
+        const response = await fetch(`/api/tasks/${id}`, {
           method: "DELETE",
         });
         
@@ -198,8 +198,8 @@ export const TasksService = {
   async updateStatus(id: string, status: "TODO" | "IN_PROGRESS" | "COMPLETED"): Promise<Task> {
     if (config.useApi) {
       try {
-        const response = await fetch(`/api/tasks/${id}`, {
-          method: "PUT",
+        const response = await fetch(`/api/tasks/${id}/status?status=${status}`, {
+          method: "PATCH",
           headers: {
             "Content-Type": "application/json",
           },

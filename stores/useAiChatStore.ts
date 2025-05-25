@@ -62,10 +62,12 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
     
     try {
       const newSession = await AiChatService.createChatSession(sessionData);
+
       set(state => ({ 
         chatSessions: [...state.chatSessions, newSession],
         currentSession: newSession
       }));
+
       return newSession;
     } catch (err) {
       const errorMessage = "Erreur lors de la création de la session de chat";
@@ -143,7 +145,7 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
 
   sendMessage: async (messageData: SendMessageInput) => {
     set({ isLoading: true, error: null });
-    
+
     try {
       // Envoyer le message de l'utilisateur
       const userMessage = await AiChatService.sendMessage(messageData);
@@ -151,7 +153,12 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
       // Mettre à jour la session avec le nouveau message
       set(state => {
         if (state.currentSession && state.currentSession.id === messageData.sessionId) {
-          const updatedMessages = [...state.currentSession.messages, userMessage];
+          // Vérification robuste pour s'assurer que messages est un tableau
+          const currentMessages = Array.isArray(state.currentSession.messages) 
+            ? state.currentSession.messages 
+            : [];
+          
+          const updatedMessages = [...currentMessages, userMessage];
           const updatedSession = {
             ...state.currentSession,
             messages: updatedMessages,
@@ -172,10 +179,10 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
         return state;
       });
       
-      // Obtenir la réponse de l'assistant
+      // Obtenir la réponse de l'assistant en passant l'ID du message au lieu du contenu
       const assistantMessage = await AiChatService.getAssistantResponse(
         messageData.sessionId,
-        messageData.content,
+        userMessage.id, // Utiliser l'ID du message au lieu du contenu
         messageData.type,
         messageData.metadata
       );
@@ -183,7 +190,12 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
       // Mettre à jour la session avec la réponse de l'assistant
       set(state => {
         if (state.currentSession && state.currentSession.id === messageData.sessionId) {
-          const updatedMessages = [...state.currentSession.messages, assistantMessage];
+          // Vérification robuste pour s'assurer que messages est un tableau
+          const currentMessages = Array.isArray(state.currentSession.messages) 
+            ? state.currentSession.messages 
+            : [];
+          
+          const updatedMessages = [...currentMessages, assistantMessage];
           const updatedSession = {
             ...state.currentSession,
             messages: updatedMessages,

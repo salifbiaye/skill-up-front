@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import {param} from "ts-interface-checker";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -10,6 +11,7 @@ export async function GET(
     { params }: { params: { id: string } }
 ) {
     try {
+        const param = await params
         // Récupération du token
         const token = request.cookies.get('auth-token')?.value;
         if (!token) {
@@ -19,7 +21,7 @@ export async function GET(
             );
         }
 
-        const id = params.id;
+        const id = param.id;
         // Construction de l'URL backend
         const backendUrl = `${API_BASE_URL}/tasks/${id}`;
 
@@ -57,6 +59,7 @@ export async function PUT(
     request: NextRequest,
     { params }: { params: { id: string } }
 ) {
+    const param = await params
     try {
         // Récupération du token
         const token = request.cookies.get('auth-token')?.value;
@@ -67,7 +70,7 @@ export async function PUT(
             );
         }
 
-        const id = params.id;
+        const id = param.id;
         // Construction de l'URL backend
         const backendUrl = `${API_BASE_URL}/tasks/${id}`;
 
@@ -106,6 +109,7 @@ export async function PATCH(
     request: NextRequest,
     { params }: { params: { id: string } }
 ) {
+    const param = await params
     try {
         // Récupération du token
         const token = request.cookies.get('auth-token')?.value;
@@ -116,7 +120,7 @@ export async function PATCH(
             );
         }
 
-        const id = params.id;
+        const id = param.id;
         // Construction de l'URL backend
         const backendUrl = `${API_BASE_URL}/tasks/${id}`;
 
@@ -155,6 +159,7 @@ export async function DELETE(
     request: NextRequest,
     { params }: { params: { id: string } }
 ) {
+    const param = await params
     try {
         // Récupération du token
         const token = request.cookies.get('auth-token')?.value;
@@ -165,7 +170,7 @@ export async function DELETE(
             );
         }
 
-        const id = params.id;
+        const id = param.id;
         // Construction de l'URL backend
         const backendUrl = `${API_BASE_URL}/tasks/${id}`;
 
@@ -186,7 +191,7 @@ export async function DELETE(
             );
         }
 
-        return NextResponse.json(await response.json());
+        return NextResponse.json({ message: "Task deleted successfully" });
     } catch (error) {
         console.error("API Error:", error);
         return NextResponse.json(

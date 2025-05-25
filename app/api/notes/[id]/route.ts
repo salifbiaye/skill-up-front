@@ -69,9 +69,16 @@ export async function PUT(
             );
         }
 
-        const id = param.id;
+        const idparam = param.id;
         // Construction de l'URL backend
-        const backendUrl = `${API_BASE_URL}/notes/${id}`;
+        const backendUrl = `${API_BASE_URL}/notes/${idparam}`;
+        const body = await request.text();
+        const {id, ...data} = JSON.parse(body);
+        const requestBody = JSON.stringify({
+            ...data,
+
+        });
+
 
         // Appel au backend
         const response = await fetch(backendUrl, {
@@ -80,7 +87,7 @@ export async function PUT(
                 'Content-Type': 'application/json',
                 "Authorization": `Bearer ${token}`,
             },
-            body: await request.text(),
+            body: requestBody,
         });
 
         if (!response.ok) {

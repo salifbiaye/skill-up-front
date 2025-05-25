@@ -6,7 +6,8 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Sparkles, Send, Search, PlusCircle, FileText, ChevronRight, X, MoreVertical, Bot, User, Trash, BookOpen, ListChecks, BookMarked } from "lucide-react"
+import { Sparkles, Send, Search, PlusCircle, FileText, ChevronRight, X, MoreVertical, Bot, User, Trash, BookOpen, ListChecks, BookMarked, ExternalLink, Copy } from "lucide-react"
+import Link from "next/link"
 import { Sidebar, SidebarHeader, SidebarContent, SidebarFooter } from "@/components/sidebar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog"
@@ -58,7 +59,7 @@ export function AiChatInterface() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [currentSession?.messages])
-  console.log("sesstions" ,chatSessions)
+
   // Filtrer les sessions de chat en fonction de la recherche
   const filteredSessions = chatSessions.filter(session => 
     session.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -87,9 +88,59 @@ export function AiChatInterface() {
     }
   }
   
+  // Envoyer un message avec une note dans la session actuelle
+  const sendNoteMessageInCurrentSession = async (noteId: string, action: "summarize" | "review") => {
+    try {
+      // Vérifier si une session est active
+      if (!currentSession) {
+        toast.error("Aucune session de chat active");
+        return;
+      }
+      
+      const note = await getNoteById(noteId);
+      if (!note) {
+        toast.error("Note introuvable");
+        return;
+      }
+      
+      // Préparer le message initial basé sur l'action
+      let initialMessage = "";
+      if (action === "summarize") {
+        initialMessage = `Peux-tu résumer cette note pour moi?`;
+      } else if (action === "review") {
+        initialMessage = `Peux-tu m'aider à réviser cette note?`;
+      }
+      
+      // Envoyer un message avec la note comme contenu spécial dans la session actuelle
+      await sendChatMessage({
+        sessionId: currentSession.id,
+        content: initialMessage,
+        type: "note",
+        metadata: {
+          noteId: note.id,
+          noteTitle: note.title,
+          noteContent: note.content,
+          action: action
+        }
+      });
+      
+      setIsNoteModalOpen(false);
+      toast.success(`Note "${note.title}" ajoutée à la conversation`);
+    } catch (error) {
+      console.error("Erreur lors de l'ajout de la note à la conversation:", error);
+      toast.error("Erreur lors de l'ajout de la note à la conversation");
+    }
+  };
+  
   // Créer une nouvelle session de chat avec une note
   const createChatWithNote = async (noteId: string, action: "summarize" | "review") => {
     try {
+      // Si une session est déjà active, utiliser cette session au lieu d'en créer une nouvelle
+      if (currentSession) {
+        await sendNoteMessageInCurrentSession(noteId, action);
+        return;
+      }
+      
       const note = await getNoteById(noteId);
       if (!note) {
         toast.error("Note introuvable");
@@ -101,9 +152,16 @@ export function AiChatInterface() {
         ? `Résumé: ${note.title}` 
         : `Révision: ${note.title}`;
       
+      // S'assurer que la session est correctement initialisée avec un tableau de messages vide
       const newSession = await createChatSession({
         title: sessionTitle,
       });
+      
+      // Vérification supplémentaire pour s'assurer que messages est un tableau
+      if (!Array.isArray(newSession.messages)) {
+        console.warn("La propriété messages n'est pas un tableau, initialisation d'un tableau vide");
+        newSession.messages = [];
+      }
       
       // Préparer le message initial basé sur l'action
       let initialMessage = "";
@@ -112,7 +170,7 @@ export function AiChatInterface() {
       } else if (action === "review") {
         initialMessage = `Peux-tu m'aider à réviser cette note?`;
       }
-      
+
       // Envoyer un message avec la note comme contenu spécial
       await sendChatMessage({
         sessionId: newSession.id,
@@ -121,6 +179,7 @@ export function AiChatInterface() {
         metadata: {
           noteId: note.id,
           noteTitle: note.title,
+          noteContent: note.content,
           action: action
         }
       });
@@ -139,14 +198,14 @@ export function AiChatInterface() {
       toast.error("Aucune session de chat active");
       return;
     }
-    
+
     try {
       // Préparer le message avec la liste des notes
       const notesList = notes.map(note => ({
         id: note.id,
         title: note.title
       }));
-      
+
       // Envoyer un message avec la liste des notes
       await sendChatMessage({
         sessionId: currentSession.id,
@@ -157,7 +216,7 @@ export function AiChatInterface() {
           action: "list"
         }
       });
-      
+
       setIsNoteModalOpen(false);
     } catch (error) {
       console.error("Erreur lors de l'envoi de la liste des notes:", error);
@@ -201,15 +260,44 @@ export function AiChatInterface() {
     }
   }
 
+  // États pour gérer l'affichage des éléments de l'interface
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const [showNotesReferences, setShowNotesReferences] = useState(false);
+  
   return (
-    <div className="flex h-full   w-full overflow-hidden">
+    <div className="flex h-full w-full overflow-hidden">
+      {/* Bouton pour afficher la sidebar sur mobile */}
+      <button 
+        className="fixed left-4 bottom-20 z-50 md:hidden bg-primary text-white rounded-full p-2 shadow-md"
+        onClick={() => setShowMobileSidebar(true)}
+      >
+        <ChevronRight className="h-5 w-5" />
+      </button>
+      
+      {/* Overlay pour fermer la sidebar sur mobile */}
+      {showMobileSidebar && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setShowMobileSidebar(false)}
+        />
+      )}
+      
       {/* Sidebar avec la liste des conversations */}
-      <Sidebar className="w-72 hidden md:flex flex-col fixed h-full border-r">
-        <SidebarHeader className="flex items-center justify-between border-none p-4 ">
-          <div className="flex items-center  gap-2">
+      <Sidebar 
+        className={`w-72 flex-col fixed h-full border-r z-50 transition-transform duration-300 ease-in-out ${showMobileSidebar ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} md:flex`}
+      >
+        <SidebarHeader className="flex items-center justify-between border-none p-4">
+          <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
             <span className="font-semibold">SkillUp IA</span>
           </div>
+          {/* Bouton pour fermer la sidebar sur mobile */}
+          <button 
+            className="md:hidden h-8 w-8 rounded-full flex items-center justify-center hover:bg-muted"
+            onClick={() => setShowMobileSidebar(false)}
+          >
+            <X className="h-4 w-4" />
+          </button>
           <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
             <DialogTrigger asChild>
               <Button size="sm" className="h-8 w-8" variant="ghost">
@@ -289,10 +377,12 @@ export function AiChatInterface() {
                     className={`flex items-center justify-between p-3 cursor-pointer rounded-md hover:bg-muted ${currentSession?.id === session.id ? "bg-muted" : ""}`}
                   >
                     <div 
-                      className="truncate flex-1"
+                      className="flex-1"
                       onClick={() => setCurrentSession(session)}
                     >
-                      {session.title}
+                      <div className="truncate max-w-[180px]" title={session.title}>
+                        {session.title.length > 25 ? `${session.title.substring(0, 25)}...` : session.title}
+                      </div>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -373,7 +463,7 @@ export function AiChatInterface() {
             </div>
           ) : (
             <div className="max-w-3xl mx-auto">
-              {currentSession.messages.length === 0 ? (
+              {currentSession && currentSession.messages && currentSession.messages.length === 0 ? (
                 <div className="text-center py-8">
                   <h3 className="text-lg font-medium mb-2">Commencez la conversation</h3>
                   <p className="text-muted-foreground mb-6">Posez une question ou demandez de l'aide</p>
@@ -409,7 +499,9 @@ export function AiChatInterface() {
                 </div>
               ) : (
                 <div className="space-y-6 py-4">
-                  {currentSession?.messages.map((message) => {
+                  {currentSession?.messages && [...currentSession.messages]
+                    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+                    .map((message) => {
                     // Afficher un message de type note
                     if (message.type === "note" && message.metadata?.noteId && message.metadata?.noteTitle) {
                       const note = notes.find(n => n.id === message.metadata?.noteId);
@@ -428,9 +520,9 @@ export function AiChatInterface() {
                             <div className="max-w-[85%]">
                               <div className="mb-2 text-sm">{message.content}</div>
                               <NoteMessage 
-                                title={note.title} 
-                                content={note.content} 
-                                noteId={note.id} 
+                                title={message.metadata?.noteTitle || note.title} 
+                                content={message.metadata?.noteContent || note.content} 
+                                noteId={message.metadata?.noteId || note.id} 
                                 timestamp={new Date(message.timestamp).toLocaleTimeString([], {
                                   hour: "2-digit",
                                   minute: "2-digit",
@@ -512,13 +604,28 @@ export function AiChatInterface() {
                               </Avatar>
                             )}
                           </div>
-                          <div>
+                          <div className="relative w-full">
                             <div className="text-sm whitespace-pre-wrap">{message.content}</div>
-                            <div className="mt-1 text-xs opacity-70">
-                              {new Date(message.timestamp).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
+                            <div className="mt-1 flex items-center justify-between">
+                              <div className="text-xs opacity-70">
+                                {new Date(message.timestamp).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </div>
+                              {message.role === "assistant" && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-6 w-6 p-0 ml-2 opacity-70 hover:opacity-100"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(message.content);
+                                    toast.success("Message copié dans le presse-papier");
+                                  }}
+                                >
+                                  <Copy className="h-3.5 w-3.5" />
+                                </Button>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -591,7 +698,7 @@ export function AiChatInterface() {
                   </Button>
                 </div>
               </div>
-              
+
               {selectedNoteAction === "list" ? (
                 <div className="flex justify-end">
                   <Button onClick={sendNoteListMessage}>Afficher mes notes</Button>
@@ -627,6 +734,72 @@ export function AiChatInterface() {
             </div>
           </DialogContent>
         </Dialog>
+        
+        {/* Bloc de références aux notes (collapsible) */}
+        {currentSession && currentSession.messages && Array.isArray(currentSession.messages) && (() => {
+          // Compter les notes référencées
+          const referencedNoteIds = Array.from(new Set(
+            currentSession.messages
+              .filter(msg => {
+                const hasNoteType = msg.type === "note";
+                const hasNoteId = msg.metadata && typeof msg.metadata === 'object' && 'noteId' in msg.metadata;
+                return hasNoteType && hasNoteId;
+              })
+              .map(msg => msg.metadata?.noteId as string)
+          ));
+          
+          // Ne rien afficher s'il n'y a pas de notes référencées
+          if (referencedNoteIds.length === 0) return null;
+          
+          return (
+            <div className="border-t border-border/50 bg-muted/20 py-2">
+              <div className="max-w-3xl mx-auto px-4">
+                <button 
+                  onClick={() => setShowNotesReferences(!showNotesReferences)}
+                  className="w-full flex items-center justify-between py-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <div className="flex items-center gap-1">
+                    <FileText className="h-4 w-4 text-primary" />
+                    <span>{referencedNoteIds.length} note{referencedNoteIds.length > 1 ? 's' : ''} référencée{referencedNoteIds.length > 1 ? 's' : ''}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs">{showNotesReferences ? 'Masquer' : 'Afficher'}</span>
+                    <ChevronRight className={`h-4 w-4 transition-transform ${showNotesReferences ? 'rotate-90' : ''}`} />
+                  </div>
+                </button>
+                
+                {showNotesReferences && (
+                  <div className="space-y-2 mt-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                    {referencedNoteIds.map(noteId => {
+                      // Trouver le premier message qui référence cette note
+                      const msg = currentSession.messages.find(m => 
+                        m.metadata && typeof m.metadata === 'object' && 'noteId' in m.metadata && m.metadata.noteId === noteId
+                      );
+                      
+                      const noteTitle = msg?.metadata?.noteTitle as string;
+                      const note = notes.find(n => n.id === noteId);
+                      
+                      return (
+                        <div key={noteId} className="flex items-center justify-between rounded-md border border-border/50 p-2 bg-card">
+                          <div className="flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm">{noteTitle || (note?.title || "Note sans titre")}</span>
+                          </div>
+                          <Link href={`/notes/${noteId}`} passHref>
+                            <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs">
+                              <ExternalLink className="h-3 w-3" />
+                              Voir
+                            </Button>
+                          </Link>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
         
         {/* Zone de saisie */}
         <div className="p-4 border-t bg-background">
