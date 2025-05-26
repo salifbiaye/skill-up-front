@@ -189,7 +189,11 @@ export async function DELETE(
             );
         }
 
-        return NextResponse.json(await response.json());
+        if (response.status === 204) {
+            return new NextResponse(null, { status: 204 });
+        } else {
+            return NextResponse.json(await response.json());
+        }
     } catch (error) {
         console.error("API Error:", error);
         return NextResponse.json(

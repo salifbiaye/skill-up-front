@@ -23,7 +23,8 @@ export function ProfileInfo() {
   const [formData, setFormData] = useState<UpdateProfileInput>({
     name: "",
     bio: "",
-    skills: []
+    location: "",
+    occupation: ""
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
@@ -33,9 +34,10 @@ export function ProfileInfo() {
   const initializeForm = () => {
     if (profile) {
       setFormData({
-        name: profile.name,
+        name: profile.fullName || "",
         bio: profile.bio || "",
-        skills: profile.skills
+        location: profile.location || "",
+        occupation: profile.occupation || ""
       })
     }
   }
@@ -46,10 +48,16 @@ export function ProfileInfo() {
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  // Gérer le changement des compétences (séparées par des virgules)
-  const handleSkillsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const skillsArray = e.target.value.split(",").map(skill => skill.trim()).filter(Boolean)
-    setFormData(prev => ({ ...prev, skills: skillsArray }))
+  // Gérer le changement des champs du formulaire
+  const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  // Gérer le changement des champs du formulaire
+  const handleOccupationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
   }
 
   // Gérer la sélection d'une image
@@ -77,15 +85,15 @@ export function ProfileInfo() {
     setIsSubmitting(true)
     try {
       // Télécharger l'image si une nouvelle a été sélectionnée
-      let avatarUrl = profile.avatar
+      let newAvatarUrl = profile.avatarUrl
       if (imageFile) {
-        avatarUrl = await uploadProfileImage(imageFile)
+        newAvatarUrl = await uploadProfileImage(imageFile)
       }
       
       // Mettre à jour le profil
       await updateProfile({
         ...formData,
-        avatar: avatarUrl
+        avatarUrl: newAvatarUrl
       })
       
       setIsEditDialogOpen(false)
@@ -97,13 +105,20 @@ export function ProfileInfo() {
   }
 
   // Formater la date d'inscription
-  const formatJoinDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Date inconnue';
+    try {
+      const date = new Date(dateString)
+      return date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+    } catch (error) {
+      console.error('Erreur de formatage de date:', error)
+      return 'Date invalide'
+    }
   }
 
   // Obtenir les initiales pour l'avatar
-  const getInitials = (name: string) => {
+  const getInitials = (name?: string) => {
+    if (!name) return '??';
     return name
       .split(' ')
       .map(part => part[0])
@@ -151,22 +166,27 @@ export function ProfileInfo() {
       </CardHeader>
       <CardContent className="flex flex-col items-center text-center pb-6">
         <Avatar className="h-24 w-24 mb-4">
-          <AvatarImage src={profile.avatar || "/placeholder.svg?height=96&width=96"} alt={profile.name} />
-          <AvatarFallback className="text-xl">{getInitials(profile.name)}</AvatarFallback>
+          <AvatarFallback className="text-xl">{getInitials(profile.fullName || '')}</AvatarFallback>
         </Avatar>
-        <h3 className="text-xl font-bold">{profile.name}</h3>
+        <h3 className="text-xl font-bold">{profile.fullName}</h3>
         <p className="text-sm text-muted-foreground mb-4">{profile.bio || "Aucune bio renseignée"}</p>
-        <Badge className="mb-6">{profile.role}</Badge>
+        <Badge className="mb-6">{profile.occupation || profile.role}</Badge>
         <div className="w-full space-y-3">
           <div className="flex items-center gap-2 text-sm">
             <Mail className="h-4 w-4 text-muted-foreground" />
             <span>{profile.email}</span>
           </div>
+          {profile.location && (
+            <div className="flex items-center gap-2 text-sm">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <span>{profile.location}</span>
+            </div>
+          )}
           <div className="flex items-center gap-2 text-sm">
             <Calendar className="h-4 w-4 text-muted-foreground" />
-            <span>Membre depuis {formatJoinDate(profile.joinedAt)}</span>
+            <span>Membre depuis {formatDate(profile.createdAt)}</span>
           </div>
-          {profile.skills.length > 0 && (
+          {profile.skills && profile.skills.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-4">
               {profile.skills.map((skill, index) => (
                 <Badge key={index} variant="secondary">{skill}</Badge>
@@ -189,11 +209,7 @@ export function ProfileInfo() {
             <div className="grid gap-4 py-4">
               <div className="flex flex-col items-center gap-2">
                 <Avatar className="h-24 w-24">
-                  <AvatarImage 
-                    src={imagePreview || profile.avatar || "/placeholder.svg?height=96&width=96"} 
-                    alt={profile.name} 
-                  />
-                  <AvatarFallback>{getInitials(profile.name)}</AvatarFallback>
+                  <AvatarFallback>{getInitials(profile.fullName || '')}</AvatarFallback>
                 </Avatar>
                 <Label htmlFor="avatar" className="cursor-pointer">
                   <div className="flex items-center gap-2 text-sm text-primary">
@@ -230,12 +246,21 @@ export function ProfileInfo() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="skills">Compétences (séparées par des virgules)</Label>
+                <Label htmlFor="location">Localisation</Label>
                 <Input 
-                  id="skills" 
-                  name="skills" 
-                  value={formData.skills?.join(", ")} 
-                  onChange={handleSkillsChange} 
+                  id="location" 
+                  name="location" 
+                  value={formData.location || ""} 
+                  onChange={handleLocationChange} 
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="occupation">Profession</Label>
+                <Input 
+                  id="occupation" 
+                  name="occupation" 
+                  value={formData.occupation || ""} 
+                  onChange={handleOccupationChange} 
                 />
               </div>
             </div>

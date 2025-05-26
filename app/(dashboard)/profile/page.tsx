@@ -27,14 +27,10 @@ export default function ProfilePage() {
     return (
         <div className="flex flex-col gap-8 p-8">
             <ProfileHeader />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="md:col-span-1 space-y-8">
+            <div className="grid grid-cols-2 gap-8">
+
                     <ProfileInfo />
                     <ProfileSecurity />
-                </div>
-                <div className="md:col-span-2">
-                    <ProfileAchievements />
-                </div>
             </div>
         </div>
     )

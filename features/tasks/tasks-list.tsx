@@ -28,7 +28,6 @@ export function TasksList() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false)
-  console.log("TasksList", tasks )
   // Filtrer les tâches
   const today = new Date();
   today.setHours(0, 0, 0, 0); // Réinitialiser l'heure à minuit pour comparer uniquement les dates
@@ -69,20 +68,28 @@ export function TasksList() {
   const handleSubmitTask = async (data: CreateTaskInput | UpdateTaskInput) => {
     try {
       if ('id' in data) {
-        await updateTask(data)
-        toast("La tâche a été mise à jour avec succès."
-        )
+        const result = await updateTask(data)
+        if (result.success) {
+          toast("La tâche a été mise à jour avec succès.")
+          setIsCreateModalOpen(false)
+        } else {
+          toast(result.error || "Une erreur est survenue lors de la mise à jour de la tâche.")
+          // Ne pas fermer le modal en cas d'erreur
+        }
       } else {
-        await createTask(data)
-        toast( "La tâche a été créée avec succès."
-        )
+        const result = await createTask(data)
+        if (result.success) {
+          toast("La tâche a été créée avec succès.")
+          setIsCreateModalOpen(false)
+        } else {
+          toast(result.error || "Une erreur est survenue lors de la création de la tâche.")
+          // Ne pas fermer le modal en cas d'erreur
+        }
       }
-      setIsCreateModalOpen(false)
     } catch (error) {
-      toast(
-         "Une erreur est survenue lors de l'opération."
-
-      )
+      console.error("Erreur lors de la soumission:", error);
+      toast("Une erreur est survenue lors de l'opération.")
+      // Ne pas fermer le modal en cas d'erreur
     }
   }
   
@@ -90,15 +97,18 @@ export function TasksList() {
     if (!selectedTask) return
     
     try {
-      await deleteTask(selectedTask.id)
-      setIsAlertDialogOpen(false)
-      toast(
-        "La tâche a été supprimée avec succès."
-      )
+      const result = await deleteTask(selectedTask.id)
+      if (result.success) {
+        setIsAlertDialogOpen(false)
+        toast("La tâche a été supprimée avec succès.")
+      } else {
+        toast(result.error || "Impossible de supprimer la tâche. Veuillez réessayer.")
+        // Ne pas fermer la boîte de dialogue en cas d'échec
+      }
     } catch (error) {
-      toast("Impossible de supprimer la tâche."
-
-      )
+      console.error("Erreur lors de la suppression:", error);
+      toast("Une erreur est survenue lors de la suppression de la tâche.")
+      // Ne pas fermer la boîte de dialogue en cas d'erreur
     }
   }
   
@@ -128,17 +138,7 @@ export function TasksList() {
     )
   }
 
-  if (error) {
-    return (
-      <Card className="mt-6">
-        <CardContent className="pt-6">
-          <div className="flex justify-center items-center h-40">
-            <p className="text-red-500">{error}</p>
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
+
 
   if (tasks.length === 0) {
     return (
@@ -161,6 +161,13 @@ export function TasksList() {
             />
           </CardContent>
         </Card>
+        <TaskModalClient
+            isOpen={isCreateModalOpen}
+            onClose={() => setIsCreateModalOpen(false)}
+            onSubmit={handleSubmitTask}
+            task={selectedTask}
+            title={selectedTask ? "Modifier la tâche" : "Nouvelle tâche"}
+        />
       </>
     )
   }

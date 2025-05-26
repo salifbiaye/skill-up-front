@@ -5,7 +5,6 @@ export async function POST(req: NextRequest, { params }: { params: { path: strin
   const path = param.path.join('/');
   const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/auth/${path}`; // Remplacez par votre URL
   const body = await req.text()
-  console.log("body",body)
   try {
     const response = await fetch(backendUrl, {
       method: 'POST',

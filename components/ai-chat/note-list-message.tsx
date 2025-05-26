@@ -8,7 +8,7 @@ import Link from "next/link";
 
 interface NoteListMessageProps {
   notes: Array<{ id: string; title: string; content?: string }>;
-  action: "summarize" | "review" | "list";
+  action: "summarize" | "review" | "list" | "quiz";
   timestamp: string;
 }
 
@@ -21,6 +21,8 @@ export function NoteListMessage({ notes, action, timestamp }: NoteListMessagePro
         return "Réviser mes notes";
       case "list":
         return "Mes notes";
+      case "quiz":
+        return "Quiz sur mes notes";
       default:
         return "Mes notes";
     }

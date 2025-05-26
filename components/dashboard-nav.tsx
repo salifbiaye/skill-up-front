@@ -23,8 +23,8 @@ export function DashboardNav({ items }: DashboardNavProps) {
   const { email, isAuthenticated } = useAuthStore()
 
   return (
-      <div className={" h-full  fixed w-64  flex overflow-hidden"}>
-        <Sidebar>
+      <div className={"h-full fixed w-64 flex overflow-hidden"}>
+        <Sidebar className="bg-slate-100 dark:bg-slate-900">
           <SidebarContent className="px-3 py-6">
             <div className="space-y-1">
               {items.map((item) => (
@@ -33,7 +33,9 @@ export function DashboardNav({ items }: DashboardNavProps) {
                       href={item.href}
                       className={cn(
                           buttonVariants({ variant: "ghost" }),
-                          pathname === item.href ? "bg-muted hover:bg-primary" : "hover:bg-primary hover:underline",
+                          pathname.startsWith(item.href)
+                            ? "bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-muted dark:text-foreground dark:hover:bg-primary" 
+                            : "hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-primary dark:hover:text-foreground dark:hover:underline",
                           "justify-start gap-2 w-full",
                       )}
                   >

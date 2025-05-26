@@ -1,27 +1,35 @@
 export interface UserProfile {
   id: string;
-  name: string;
+  userId?: string; // From backend ProfileResponse
   email: string;
-  avatar?: string;
+  fullName: string; // From backend ProfileResponse
   bio?: string;
-  role: string;
-  skills: string[];
-  joinedAt: string;
-  preferences: UserPreferences;
+  location?: string;
+  occupation?: string;
+  avatarUrl?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  
+  // Additional fields for frontend use
+  role?: string;
+  skills?: string[];
+  joinedAt?: string;
+  preferences?: UserPreferences;
 }
 
 export interface UserPreferences {
-  theme: "light" | "dark" | "system";
-  notifications: boolean;
-  emailNotifications: boolean;
-  language: string;
+  theme?: "light" | "dark" | "system";
+  notifications?: boolean;
+  emailNotifications?: boolean;
+  language?: string;
 }
 
 export interface UpdateProfileInput {
   name?: string;
   bio?: string;
-  avatar?: string;
-  skills?: string[];
+  location?: string;
+  occupation?: string;
+  avatarUrl?: string;
 }
 
 export interface UpdatePreferencesInput {

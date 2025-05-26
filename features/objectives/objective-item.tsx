@@ -71,18 +71,7 @@ export function ObjectiveItem({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Badge 
-            variant={
-              objective.priority === "high" 
-                ? "destructive" 
-                : objective.priority === "medium" 
-                  ? "default" 
-                  : "outline"
-            } 
-            className="text-xs"
-          >
-            {objective.priority === "high" ? "Haute" : objective.priority === "medium" ? "Moyenne" : "Basse"}
-          </Badge>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -91,21 +80,12 @@ export function ObjectiveItem({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {!isCompleted && (
-                <DropdownMenuItem onClick={() => onEdit(objective)}>
-                  Modifier
-                </DropdownMenuItem>
-              )}
-              {!isCompleted && (
-                <DropdownMenuItem onClick={() => onDelete(objective)}>
-                  Supprimer
-                </DropdownMenuItem>
-              )}
-              {isCompleted && (
-                <DropdownMenuItem disabled className="opacity-50 cursor-not-allowed">
-                  Objectif terminé (verrouillé)
-                </DropdownMenuItem>
-              )}
+              <DropdownMenuItem onClick={() => onEdit(objective)}>
+                Modifier
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onDelete(objective)}>
+                Supprimer
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

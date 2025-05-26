@@ -9,7 +9,7 @@ export interface ChatMessage {
     noteTitle?: string;
     noteContent?: string;
     notes?: Array<{ id: string; title: string; content?: string }>;
-    action?: "summarize" | "review" | "list";
+    action?: "summarize" | "review" | "list" | "quiz";
   };
 }
 
@@ -40,6 +40,6 @@ export interface SendMessageInput {
     noteTitle?: string;
     noteContent?: string;
     notes?: Array<{ id: string; title: string; content?: string }>;
-    action?: "summarize" | "review" | "list";
+    action?: "summarize" | "review" | "list" | "quiz";
   };
 }

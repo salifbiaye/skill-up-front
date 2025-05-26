@@ -28,7 +28,7 @@ export function DashboardHeader() {
                   <span className="sr-only">Toggle Menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[240px] sm:w-[280px]">
+              <SheetContent side="left" className="w-[280px] ">
                 <SheetTitle>
                   <div className="flex items-center gap-2 pt-4 pb-8">
                     <GraduationCap className="h-6 w-6 text-primary"/>
@@ -36,7 +36,9 @@ export function DashboardHeader() {
                   </div>
                 </SheetTitle>
 
-                <DashboardNav items={dashboardConfig.sidebarNav}/>
+           <div className={"w-full flex justify-center rounded-lg"}>
+             <DashboardNav items={dashboardConfig.sidebarNav}/>
+           </div>
               </SheetContent>
             </Sheet>
             <Link href="/dashboard" className="flex items-center gap-2 md:hidden">

@@ -42,6 +42,20 @@ export async function POST(
 
   const backendUrl = `${API_BASE_URL}/notes`;
   const token = request.cookies.get('auth-token')?.value;
+  
+  // Récupérer le corps de la requête
+  const bodyText = await request.text();
+  let bodyData = JSON.parse(bodyText);
+  
+  // Supprimer goalId et taskId s'ils sont vides
+  if (bodyData.goalId === "") {
+    delete bodyData.goalId;
+  }
+  
+  if (bodyData.taskId === "") {
+    delete bodyData.taskId;
+  }
+  
   try {
     const response = await fetch(backendUrl, {
       method: 'POST',
@@ -49,7 +63,7 @@ export async function POST(
         'Content-Type': 'application/json',
         "Authorization": `Bearer ${token}`,
       },
-      body: await request.text(),
+      body: JSON.stringify(bodyData),
     });
 
     const data = await response.json();

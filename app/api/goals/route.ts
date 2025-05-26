@@ -67,6 +67,9 @@ export async function POST(
     );
   }
   try {
+    const bd = await request.text();
+    let bodyData = JSON.parse(bd);
+    delete bodyData.priority;
 
     const response = await fetch(backendUrl, {
       method: 'POST',
@@ -74,7 +77,7 @@ export async function POST(
         'Content-Type': 'application/json',
         "Authorization": `Bearer ${token}`,
       },
-      body: await request.text(),
+      body: JSON.stringify(bodyData),
     });
 
     const data = await response.json();

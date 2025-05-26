@@ -51,13 +51,22 @@ export function ObjectivesGrid() {
   const handleSubmitObjective = async (data: CreateObjectiveInput | UpdateObjectiveInput) => {
     try {
       if ('id' in data) {
-        await updateObjective(data);
-        toast("L'objectif a été mis à jour avec succès.");
+        const result = await updateObjective(data);
+        if (result.success) {
+          toast("L'objectif a été mis à jour avec succès.");
+          setIsCreateModalOpen(false);
+        } else {
+          toast(result.error || "Une erreur est survenue lors de la mise à jour de l'objectif.");
+        }
       } else {
-        await createObjective(data);
-        toast("L'objectif a été créé avec succès.");
+        const result = await createObjective(data);
+        if (result.success) {
+          toast("L'objectif a été créé avec succès.");
+          setIsCreateModalOpen(false);
+        } else {
+          toast(result.error || "Une erreur est survenue lors de la création de l'objectif.");
+        }
       }
-      setIsCreateModalOpen(false);
     } catch (error) {
       toast("Une erreur est survenue lors de l'opération.");
     }
@@ -67,9 +76,14 @@ export function ObjectivesGrid() {
     if (!selectedObjective) return;
     
     try {
-      await deleteObjective(selectedObjective.id);
-      setIsAlertDialogOpen(false);
-      toast("L'objectif a été supprimé avec succès.");
+      const result = await deleteObjective(selectedObjective.id);
+      
+      if (result.success) {
+        setIsAlertDialogOpen(false);
+        toast("L'objectif a été supprimé avec succès.");
+      } else {
+        toast(result.error || "Impossible de supprimer l'objectif.");
+      }
     } catch (error) {
       toast("Impossible de supprimer l'objectif.");
     }
@@ -77,8 +91,12 @@ export function ObjectivesGrid() {
   
   const handleUpdateProgress = async (id: string, progress: number) => {
     try {
-      await updateProgress(id, progress);
-      toast(`Progression mise à jour: ${progress}%`);
+      const result = await updateProgress(id, progress);
+      if (result.success) {
+        toast(`Progression mise à jour: ${progress}%`);
+      } else {
+        toast(result.error || "Impossible de mettre à jour la progression.");
+      }
     } catch (error) {
       toast("Impossible de mettre à jour la progression.");
     }
@@ -86,8 +104,12 @@ export function ObjectivesGrid() {
   
   const handleUpdateStatus = async (id: string, status: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED") => {
     try {
-      await updateStatus(id, status);
-      toast(`Statut mis à jour: ${status === "COMPLETED" ? "Terminé" : status === "IN_PROGRESS" ? "En cours" : "Non commencé"}`);
+      const result = await updateStatus(id, status);
+      if (result.success) {
+        toast(`Statut mis à jour: ${status === "COMPLETED" ? "Terminé" : status === "IN_PROGRESS" ? "En cours" : "Non commencé"}`);
+      } else {
+        toast(result.error || "Impossible de mettre à jour le statut.");
+      }
     } catch (error) {
       toast("Impossible de mettre à jour le statut.");
     }
@@ -106,17 +128,7 @@ export function ObjectivesGrid() {
     );
   }
   
-  if (error) {
-    return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex justify-center items-center h-40">
-            <p className="text-red-500">{error}</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+
   
   return (
     <>

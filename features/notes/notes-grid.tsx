@@ -10,7 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useNotes } from "@/hooks/use-notes"
 import { NoteModalClient } from "@/components/modals/note-modal-client"
 import { Note, UpdateNoteInput, CreateNoteInput } from "@/types/notes"
-import { useTasksStore, useAiChatStore } from "@/stores"
+import { useTasksStore, useAiChatStore, useObjectivesStore } from "@/stores"
 import { useRouter } from "next/navigation"
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
@@ -18,23 +18,41 @@ import {toast} from "sonner";
 
 export function NotesGrid() {
   const { notes, isLoading, error, deleteNote, updateNote, generateAiSummary } = useNotes()
-  const { tasks, fetchTasks } = useTasksStore()
+  
+  // Utiliser des sélecteurs individuels pour éviter les boucles infinies
+  const tasks = useTasksStore(state => state.tasks)
+  const fetchTasks = useTasksStore(state => state.fetchTasks)
+  
+  // Récupérer les objectifs pour afficher leurs titres
+  const objectives = useObjectivesStore(state => state.objectives)
+  const fetchObjectives = useObjectivesStore(state => state.fetchObjectives)
+  
   const router = useRouter()
-  const { createChatSession, sendMessage } = useAiChatStore()
+  
+  // Utiliser des sélecteurs individuels pour éviter les boucles infinies
+  const createChatSession = useAiChatStore(state => state.createChatSession)
+  const sendMessage = useAiChatStore(state => state.sendMessage)
   
   const [editingNote, setEditingNote] = useState<Note | null>(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [deleteConfirmNote, setDeleteConfirmNote] = useState<Note | null>(null)
   
-  // Charger les tâches au montage du composant
+  // Charger les tâches et les objectifs au montage du composant
   useEffect(() => {
     fetchTasks();
-  }, [fetchTasks]);
+    fetchObjectives();
+  }, [fetchTasks, fetchObjectives]);
   
   // Fonction pour obtenir le titre d'une tâche à partir de son ID
   const getTaskTitle = (taskId: string) => {
     const task = tasks.find(t => t.id === taskId);
     return task ? task.title : "Tâche inconnue";
+  }
+  
+  // Fonction pour obtenir le titre d'un objectif à partir de son ID
+  const getObjectiveTitle = (objectiveId: string) => {
+    const objective = objectives.find(obj => obj.id === objectiveId);
+    return objective ? objective.title : "Objectif inconnue";
   }
   
   // Gérer la modification d'une note
@@ -106,13 +124,6 @@ export function NotesGrid() {
     )
   }
 
-  if (error) {
-    return (
-      <div className="flex justify-center items-center h-40">
-        <p className="text-red-500">{error}</p>
-      </div>
-    )
-  }
 
   if (notes.length === 0) {
     return (
@@ -182,7 +193,7 @@ export function NotesGrid() {
               {note.goalId && (
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Target className="h-3 w-3" />
-                  <span>{note.goalId}</span>
+                  <span>Objectif: {getObjectiveTitle(note.goalId)}</span>
                 </div>
               )}
               {note.taskId && (

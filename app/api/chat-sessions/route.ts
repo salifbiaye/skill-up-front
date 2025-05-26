@@ -54,7 +54,6 @@ export async function POST(
   try {
     const body = await request.text();
     const parsedBody = JSON.parse(body);
-    console.log('Request body:', body)
     const response = await fetch(backendUrl, {
       method: 'POST',
       headers: {

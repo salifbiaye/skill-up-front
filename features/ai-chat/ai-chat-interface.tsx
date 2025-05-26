@@ -44,7 +44,7 @@ export function AiChatInterface() {
   const [newChatTitle, setNewChatTitle] = useState("")
   const [activeTab, setActiveTab] = useState("all")
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false)
-  const [selectedNoteAction, setSelectedNoteAction] = useState<"summarize" | "review" | "list">("list")
+  const [selectedNoteAction, setSelectedNoteAction] = useState<"summarize" | "review" | "quiz">("summarize")
   
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
@@ -89,7 +89,7 @@ export function AiChatInterface() {
   }
   
   // Envoyer un message avec une note dans la session actuelle
-  const sendNoteMessageInCurrentSession = async (noteId: string, action: "summarize" | "review") => {
+  const sendNoteMessageInCurrentSession = async (noteId: string, action: "summarize" | "review" | "quiz") => {
     try {
       // Vérifier si une session est active
       if (!currentSession) {
@@ -109,6 +109,8 @@ export function AiChatInterface() {
         initialMessage = `Peux-tu résumer cette note pour moi?`;
       } else if (action === "review") {
         initialMessage = `Peux-tu m'aider à réviser cette note?`;
+      } else if (action === "quiz") {
+        initialMessage = `Peux-tu m'aider à créer un quiz sur cette note?`;
       }
       
       // Envoyer un message avec la note comme contenu spécial dans la session actuelle
@@ -133,7 +135,7 @@ export function AiChatInterface() {
   };
   
   // Créer une nouvelle session de chat avec une note
-  const createChatWithNote = async (noteId: string, action: "summarize" | "review") => {
+  const createChatWithNote = async (noteId: string, action: "summarize" | "review" | "quiz") => {
     try {
       // Si une session est déjà active, utiliser cette session au lieu d'en créer une nouvelle
       if (currentSession) {
@@ -148,9 +150,14 @@ export function AiChatInterface() {
       }
       
       // Créer une nouvelle session avec un titre basé sur l'action et la note
-      const sessionTitle = action === "summarize" 
-        ? `Résumé: ${note.title}` 
-        : `Révision: ${note.title}`;
+      let sessionTitle = "";
+      if (action === "summarize") {
+        sessionTitle = `Résumé: ${note.title}`;
+      } else if (action === "review") {
+        sessionTitle = `Révision: ${note.title}`;
+      } else if (action === "quiz") {
+        sessionTitle = `Quiz: ${note.title}`;
+      }
       
       // S'assurer que la session est correctement initialisée avec un tableau de messages vide
       const newSession = await createChatSession({
@@ -169,6 +176,8 @@ export function AiChatInterface() {
         initialMessage = `Peux-tu résumer cette note pour moi?`;
       } else if (action === "review") {
         initialMessage = `Peux-tu m'aider à réviser cette note?`;
+      }else if (action === "quiz") {
+        initialMessage = `Peux-tu m'aider à créer un quiz sur cette note?`;
       }
 
       // Envoyer un message avec la note comme contenu spécial
@@ -192,37 +201,7 @@ export function AiChatInterface() {
     }
   };
   
-  // Envoyer un message avec la liste des notes
-  const sendNoteListMessage = async () => {
-    if (!currentSession) {
-      toast.error("Aucune session de chat active");
-      return;
-    }
 
-    try {
-      // Préparer le message avec la liste des notes
-      const notesList = notes.map(note => ({
-        id: note.id,
-        title: note.title
-      }));
-
-      // Envoyer un message avec la liste des notes
-      await sendChatMessage({
-        sessionId: currentSession.id,
-        content: "Voici la liste de mes notes",
-        type: "note-list",
-        metadata: {
-          notes: notesList,
-          action: "list"
-        }
-      });
-
-      setIsNoteModalOpen(false);
-    } catch (error) {
-      console.error("Erreur lors de l'envoi de la liste des notes:", error);
-      toast.error("Erreur lors de l'envoi de la liste des notes");
-    }
-  };
 
   // Supprimer une session de chat
   const handleDeleteSession = async (sessionId: string) => {
@@ -673,37 +652,33 @@ export function AiChatInterface() {
               <div className="grid gap-4">
                 <div className="grid grid-cols-3 gap-4">
                   <Button
-                    variant="outline"
+                    variant={selectedNoteAction === "summarize" ? "default" : "outline"}
                     className="flex flex-col items-center gap-2 h-auto py-4"
                     onClick={() => setSelectedNoteAction("summarize")}
                   >
-                    <BookOpen className="h-8 w-8 text-primary" />
+                    <BookOpen className="h-8 w-8 text-primary-foreground" />
                     <span className="text-xs">Résumer</span>
                   </Button>
                   <Button
-                    variant="outline"
+                    variant={selectedNoteAction === "review" ? "default" : "outline"}
                     className="flex flex-col items-center gap-2 h-auto py-4"
                     onClick={() => setSelectedNoteAction("review")}
                   >
-                    <BookMarked className="h-8 w-8 text-primary" />
+                    <BookMarked className="h-8 w-8 text-primary-foreground" />
                     <span className="text-xs">Réviser</span>
                   </Button>
                   <Button
-                    variant="outline"
+                    variant={selectedNoteAction === "quiz" ? "default" : "outline"}
                     className="flex flex-col items-center gap-2 h-auto py-4"
-                    onClick={() => setSelectedNoteAction("list")}
+                    onClick={() => setSelectedNoteAction("quiz")}
                   >
-                    <ListChecks className="h-8 w-8 text-primary" />
-                    <span className="text-xs">Lister</span>
+                    <ListChecks className="h-8 w-8 text-primary-foreground" />
+                    <span className="text-xs">Quiz</span>
                   </Button>
                 </div>
               </div>
 
-              {selectedNoteAction === "list" ? (
-                <div className="flex justify-end">
-                  <Button onClick={sendNoteListMessage}>Afficher mes notes</Button>
-                </div>
-              ) : (
+              {(
                 <ScrollArea className="h-[300px] pr-4">
                   <div className="space-y-2">
                     {notes.length === 0 ? (

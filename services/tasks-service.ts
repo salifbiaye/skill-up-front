@@ -43,7 +43,9 @@ export const TasksService = {
       try {
         const response = await fetch(`/api/tasks/${id}`);
         if (!response.ok) {
-          throw new Error("Erreur lors de la récupération de la tâche");
+          console.error("Erreur lors de la récupération de la tâche");
+          // Fallback aux données fictives en cas d'erreur
+          return tasksData.find(task => task.id === id);
         }
         return await response.json();
       } catch (error) {
@@ -65,7 +67,9 @@ export const TasksService = {
       try {
         const response = await fetch(`/api/tasks?objectiveId=${objectiveId}`);
         if (!response.ok) {
-          throw new Error("Erreur lors de la récupération des tâches liées à l'objectif");
+          console.error("Erreur lors de la récupération des tâches liées à l'objectif");
+          // Fallback aux données fictives en cas d'erreur
+          return tasksData.filter(task => task.goalId === objectiveId);
         }
         return await response.json();
       } catch (error) {
@@ -80,10 +84,37 @@ export const TasksService = {
   },
 
   /**
+   * Vérifie si un objectif existe
+   */
+  async objectiveExists(goalId: string): Promise<boolean> {
+    if (!goalId) return true; // Si pas de goalId, on considère que c'est valide
+    
+    try {
+      // Utiliser le service des objectifs pour vérifier si l'objectif existe
+      const response = await fetch(`/api/goals/${goalId}`);
+      return response.ok;
+    } catch (error) {
+      console.error("Erreur lors de la vérification de l'objectif:", error);
+      return false;
+    }
+  },
+
+  /**
    * Crée une nouvelle tâche
    */
-  async createTask(taskData: CreateTaskInput): Promise<Task> {
-    console.log("Création d'une tâche avec les données:", taskData); // Debugging line
+  async createTask(taskData: CreateTaskInput): Promise<{ success: boolean; data?: Task; error?: string }> {
+
+    // Vérifier si le goalId existe si présent
+    if (taskData.goalId) {
+      const goalExists = await this.objectiveExists(taskData.goalId);
+      if (!goalExists) {
+        return {
+          success: false,
+          error: "L'objectif associé n'existe pas. Impossible de créer la tâche."
+        };
+      }
+    }
+    
     if (config.useApi) {
       try {
         const response = await fetch(`/api/tasks`, {
@@ -95,36 +126,62 @@ export const TasksService = {
         });
         
         if (!response.ok) {
-          throw new Error("Erreur lors de la création de la tâche");
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData.message || "Erreur lors de la création de la tâche";
+          return {
+            success: false,
+            error: errorMessage
+          };
         }
         
-        return await response.json();
+        const data = await response.json();
+        return {
+          success: true,
+          data
+        };
       } catch (error) {
         console.error("Erreur API:", error);
-        // Créer une tâche fictive avec un ID généré
-        const newTask: Task = {
-          id: Date.now().toString(),
-          ...taskData,
-          status: "TODO",
+        return {
+          success: false,
+          error: "Erreur lors de la communication avec le serveur"
         };
-        return newTask;
       }
     }
     
     // Créer une tâche fictive avec un ID généré
     const newTask: Task = {
       id: Date.now().toString(),
-      ...taskData,
+      title: taskData.title,
+      description: taskData.description,
+      dueDate: taskData.dueDate,
+      priority: taskData.priority,
+      goalId: taskData.goalId || "",
+      objectiveTitle: taskData.relatedObjective, // Utiliser objectiveTitle au lieu de relatedObjective
+      tags: taskData.tags || [],
       status: "TODO",
     };
     
-    return Promise.resolve(newTask);
+    return {
+      success: true,
+      data: newTask
+    };
   },
 
   /**
    * Met à jour une tâche existante
    */
-  async updateTask(taskData: UpdateTaskInput): Promise<Task> {
+  async updateTask(taskData: UpdateTaskInput): Promise<{ success: boolean; data?: Task; error?: string }> {
+    // Vérifier si le goalId existe si présent et modifié
+    if (taskData.goalId) {
+      const goalExists = await this.objectiveExists(taskData.goalId);
+      if (!goalExists) {
+        return {
+          success: false,
+          error: "L'objectif associé n'existe pas. Impossible de mettre à jour la tâche."
+        };
+      }
+    }
+    
     if (config.useApi) {
       try {
         const response = await fetch(`/api/tasks/${taskData.id}`, {
@@ -136,21 +193,24 @@ export const TasksService = {
         });
         
         if (!response.ok) {
-          throw new Error("Erreur lors de la mise à jour de la tâche");
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData.message || "Erreur lors de la mise à jour de la tâche";
+          return {
+            success: false,
+            error: errorMessage
+          };
         }
         
-        return await response.json();
+        const data = await response.json();
+        return {
+          success: true,
+          data
+        };
       } catch (error) {
         console.error("Erreur API:", error);
-        // Simuler une mise à jour avec les données fictives
-        const existingTask = tasksData.find(task => task.id === taskData.id);
-        if (!existingTask) {
-          throw new Error("Tâche non trouvée");
-        }
-        
         return {
-          ...existingTask,
-          ...taskData,
+          success: false,
+          error: "Erreur lors de la communication avec le serveur"
         };
       }
     }
@@ -158,19 +218,85 @@ export const TasksService = {
     // Simuler une mise à jour avec les données fictives
     const existingTask = tasksData.find(task => task.id === taskData.id);
     if (!existingTask) {
-      throw new Error("Tâche non trouvée");
+      return {
+        success: false,
+        error: "Tâche non trouvée"
+      };
     }
     
-    return Promise.resolve({
+    const updatedTask = {
       ...existingTask,
       ...taskData,
-    });
+    };
+    
+    return {
+      success: true,
+      data: updatedTask
+    };
+  },
+
+  /**
+   * Met à jour le statut d'une tâche
+   */
+  async updateStatus(id: string, status: "TODO" | "IN_PROGRESS" | "COMPLETED"): Promise<{ success: boolean; data?: Task; error?: string }> {
+    if (config.useApi) {
+      try {
+        const response = await fetch(`/api/tasks/${id}/status`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ status }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData.message || "Erreur lors de la mise à jour du statut de la tâche";
+          return {
+            success: false,
+            error: errorMessage
+          };
+        }
+
+        const data = await response.json();
+        return {
+          success: true,
+          data
+        };
+      } catch (error) {
+        console.error("Erreur API:", error);
+        return {
+          success: false,
+          error: "Erreur lors de la communication avec le serveur"
+        };
+      }
+    }
+
+    // Simuler une mise à jour de statut avec les données fictives
+    const existingTask = tasksData.find(task => task.id === id);
+    if (!existingTask) {
+      return {
+        success: false,
+        error: "Tâche non trouvée"
+      };
+    }
+
+    const updatedTask = {
+      ...existingTask,
+      status,
+    };
+
+    return {
+      success: true,
+      data: updatedTask
+    };
   },
 
   /**
    * Supprime une tâche
    */
-  async deleteTask(id: string): Promise<boolean> {
+  async deleteTask(id: string): Promise<{ success: boolean; error?: string }> {
+    
     if (config.useApi) {
       try {
         const response = await fetch(`/api/tasks/${id}`, {
@@ -178,45 +304,27 @@ export const TasksService = {
         });
         
         if (!response.ok) {
-          throw new Error("Erreur lors de la suppression de la tâche");
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData.message || "Erreur lors de la suppression de la tâche";
+          return {
+            success: false,
+            error: errorMessage
+          };
         }
         
-        return true;
+        return { success: true };
       } catch (error) {
         console.error("Erreur API:", error);
-        return true; // Simuler une suppression réussie
+        return {
+          success: false,
+          error: "Erreur lors de la communication avec le serveur"
+        };
       }
     }
     
-    // Simuler une suppression réussie
-    return Promise.resolve(true);
+    // Simuler une suppression réussie avec les données fictives
+    return { success: true };
   },
 
-  /**
-   * Met à jour le statut d'une tâche
-   */
-  async updateStatus(id: string, status: "TODO" | "IN_PROGRESS" | "COMPLETED"): Promise<Task> {
-    if (config.useApi) {
-      try {
-        const response = await fetch(`/api/tasks/${id}/status?status=${status}`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ status }),
-        });
-        
-        if (!response.ok) {
-          throw new Error("Erreur lors de la mise à jour du statut");
-        }
-        
-        return await response.json();
-      } catch (error) {
-        console.error("Erreur API:", error);
 
-      }
-    }
-    
-    return this.updateTask({ id,});
-  },
 };

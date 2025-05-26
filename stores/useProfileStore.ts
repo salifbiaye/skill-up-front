@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { UserProfile, UpdateProfileInput, UpdatePreferencesInput } from '@/types/profile';
 import { ProfileService } from '@/services/profile-service';
+import {toast} from "sonner";
 
 interface ProfileState {
   profile: UserProfile | null;
@@ -43,6 +44,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     try {
       const updatedProfile = await ProfileService.updateProfile(profileData);
       set({ profile: updatedProfile });
+      toast.success("Profil mis à jour avec succès");
       return updatedProfile;
     } catch (err) {
       const errorMessage = "Erreur lors de la mise à jour du profil";
@@ -78,7 +80,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       const avatarUrl = await ProfileService.uploadProfileImage(file);
       
       if (get().profile) {
-        const updatedProfile = await ProfileService.updateProfile({ avatar: avatarUrl });
+        const updatedProfile = await ProfileService.updateProfile({ avatarUrl: avatarUrl });
         set({ profile: updatedProfile });
       }
       
@@ -98,9 +100,11 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     
     try {
       const success = await ProfileService.changePassword(currentPassword, newPassword);
+      toast.success("Mot de passe changé avec succès");
       return success;
     } catch (err) {
       const errorMessage = "Erreur lors du changement de mot de passe";
+      toast.error(errorMessage);
       console.error(errorMessage, err);
       set({ error: errorMessage });
       throw err;

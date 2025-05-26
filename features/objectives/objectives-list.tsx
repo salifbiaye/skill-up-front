@@ -34,7 +34,6 @@ export function ObjectivesList() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedObjective, setSelectedObjective] = useState<Objective | null>(null);
   const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false);
-  console.log("ObjectivesList", objectives)
   // Filtrer les objectifs par statut
   const notStartedObjectives = objectives.filter(obj => obj.status === "NOT_STARTED");
   const inProgressObjectives = objectives.filter(obj => obj.status === "IN_PROGRESS");
@@ -75,9 +74,14 @@ export function ObjectivesList() {
     if (!selectedObjective) return;
     
     try {
-      await deleteObjective(selectedObjective.id);
-      setIsAlertDialogOpen(false);
-      toast("L'objectif a été supprimé avec succès.");
+      const result = await deleteObjective(selectedObjective.id);
+      
+      if (result.success) {
+        setIsAlertDialogOpen(false);
+        toast("L'objectif a été supprimé avec succès.");
+      } else {
+        toast(result.error || "Impossible de supprimer l'objectif.");
+      }
     } catch (error) {
       toast("Impossible de supprimer l'objectif.");
     }
@@ -113,18 +117,8 @@ export function ObjectivesList() {
       </Card>
     );
   }
-  
-  if (error) {
-    return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex justify-center items-center h-40">
-            <p className="text-red-500">{error}</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+
+
   
   // Affichage d'un message quand il n'y a aucun objectif
   if (objectives.length === 0) {

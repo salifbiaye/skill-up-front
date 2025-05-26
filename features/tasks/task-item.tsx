@@ -83,23 +83,14 @@ export function TaskItem({
                 {copied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
                 Copier l'ID
               </DropdownMenuItem>
-              {!isTaskCompleted && (
-                <DropdownMenuItem onClick={() => onEdit(task)}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Modifier
-                </DropdownMenuItem>
-              )}
-              {!isTaskCompleted && (
-                <DropdownMenuItem onClick={() => onDelete(task)}>
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Supprimer
-                </DropdownMenuItem>
-              )}
-              {isTaskCompleted && (
-                <DropdownMenuItem disabled className="opacity-50 cursor-not-allowed">
-                  Tâche terminée (verrouillée)
-                </DropdownMenuItem>
-              )}
+              <DropdownMenuItem onClick={() => onEdit(task)}>
+                <Edit className="h-4 w-4 mr-2" />
+                Modifier
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onDelete(task)}>
+                <Trash2 className="h-4 w-4 mr-2" />
+                Supprimer
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

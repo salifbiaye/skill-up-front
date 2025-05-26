@@ -52,7 +52,9 @@ export const ObjectivesService = {
       try {
         const response = await fetch(`/api/goals/${id}`);
         if (!response.ok) {
-          throw new Error("Erreur lors de la récupération de l'objectif");
+          console.error("Erreur lors de la récupération de l'objectif");
+          // Fallback aux données fictives en cas d'erreur
+          return objectivesData.find(objective => objective.id === id);
         }
         return await response.json();
       } catch (error) {
@@ -69,9 +71,8 @@ export const ObjectivesService = {
   /**
    * Crée un nouvel objectif
    */
-  async createObjective(objectiveData: CreateObjectiveInput): Promise<Objective> {
+  async createObjective(objectiveData: CreateObjectiveInput): Promise<{ success: boolean; data?: Objective; error?: string }> {
     if (config.useApi) {
-      console.log("Création d'un objectif avec les données:", objectiveData); // Debugging line
       try {
         const response = await fetch(`/api/goals`, {
           method: "POST",
@@ -82,23 +83,25 @@ export const ObjectivesService = {
         });
         
         if (!response.ok) {
-          throw new Error("Erreur lors de la création de l'objectif");
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData.message || "Erreur lors de la création de l'objectif";
+          return {
+            success: false,
+            error: errorMessage
+          };
         }
         
-        return await response.json();
+        const data = await response.json();
+        return {
+          success: true,
+          data
+        };
       } catch (error) {
         console.error("Erreur API:", error);
-        // Créer un objectif fictif avec un ID généré
-        const newObjective: Objective = {
-          id: Date.now().toString(),
-          ...objectiveData,
-          status: "NOT_STARTED",
-          progress: 0,
-          relatedTasks: [],
-          completedTasks: 0,
-          totalTasks: 0,
+        return {
+          success: false,
+          error: "Erreur lors de la communication avec le serveur"
         };
-        return newObjective;
       }
     }
     
@@ -113,13 +116,16 @@ export const ObjectivesService = {
       totalTasks: 0,
     };
     
-    return Promise.resolve(newObjective);
+    return {
+      success: true,
+      data: newObjective
+    };
   },
 
   /**
    * Met à jour un objectif existant
    */
-  async updateObjective(objectiveData: UpdateObjectiveInput): Promise<Objective> {
+  async updateObjective(objectiveData: UpdateObjectiveInput): Promise<{ success: boolean; data?: Objective; error?: string }> {
     if (config.useApi) {
       try {
         const response = await fetch(`/api/goals/${objectiveData.id}`, {
@@ -131,21 +137,33 @@ export const ObjectivesService = {
         });
         
         if (!response.ok) {
-          throw new Error("Erreur lors de la mise à jour de l'objectif");
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData.message || "Erreur lors de la mise à jour de l'objectif";
+          return {
+            success: false,
+            error: errorMessage
+          };
         }
         
-        return await response.json();
+        const data = await response.json();
+        return {
+          success: true,
+          data
+        };
       } catch (error) {
         console.error("Erreur API:", error);
-        // Simuler une mise à jour avec les données fictives
+        // Vérifier si l'objectif existe
         const existingObjective = objectivesData.find(objective => objective.id === objectiveData.id);
         if (!existingObjective) {
-          throw new Error("Objectif non trouvé");
+          return {
+            success: false,
+            error: "Objectif non trouvé"
+          };
         }
         
         return {
-          ...existingObjective,
-          ...objectiveData,
+          success: false,
+          error: "Erreur lors de la communication avec le serveur"
         };
       }
     }
@@ -153,19 +171,38 @@ export const ObjectivesService = {
     // Simuler une mise à jour avec les données fictives
     const existingObjective = objectivesData.find(objective => objective.id === objectiveData.id);
     if (!existingObjective) {
-      throw new Error("Objectif non trouvé");
+      return {
+        success: false,
+        error: "Objectif non trouvé"
+      };
     }
     
-    return Promise.resolve({
+    const updatedObjective = {
       ...existingObjective,
       ...objectiveData,
-    });
+    };
+    
+    return {
+      success: true,
+      data: updatedObjective
+    };
   },
 
   /**
    * Supprime un objectif
    */
-  async deleteObjective(id: string): Promise<boolean> {
+  async deleteObjective(id: string): Promise<{ success: boolean; error?: string }> {
+    // Vérifier si l'objectif est lié à des tâches
+    const tasksService = await import('./tasks-service').then(module => module.TasksService);
+    const linkedTasks = await tasksService.getTasksByObjective(id);
+    
+    if (linkedTasks && linkedTasks.length > 0) {
+      return {
+        success: false,
+        error: "Impossible de supprimer cet objectif car il est lié à des tâches. Supprimez d'abord les tâches associées."
+      };
+    }
+    
     if (config.useApi) {
       try {
         const response = await fetch(`/api/goals/${id}`, {
@@ -173,24 +210,38 @@ export const ObjectivesService = {
         });
         
         if (!response.ok) {
-          throw new Error("Erreur lors de la suppression de l'objectif");
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData.message || "Erreur lors de la suppression de l'objectif";
+          return {
+            success: false,
+            error: errorMessage
+          };
         }
         
-        return true;
+        return { success: true };
       } catch (error) {
         console.error("Erreur API:", error);
-        return true; // Simuler une suppression réussie
+        return {
+          success: false,
+          error: "Erreur lors de la communication avec le serveur"
+        };
       }
     }
     
-    // Simuler une suppression réussie
-    return Promise.resolve(true);
+    // Simuler une suppression réussie avec les données fictives
+    // Supprimer l'objectif des données fictives
+    const index = objectivesData.findIndex(obj => obj.id === id);
+    if (index !== -1) {
+      objectivesData.splice(index, 1);
+    }
+    
+    return { success: true };
   },
 
   /**
    * Met à jour la progression d'un objectif
    */
-  async updateProgress(id: string, progress: number): Promise<Objective> {
+  async updateProgress(id: string, progress: number): Promise<{ success: boolean; data?: Objective; error?: string }> {
     if (config.useApi) {
       try {
         const response = await fetch(`/api/goals/${id}/progress?progress=${progress}`, {
@@ -202,10 +253,19 @@ export const ObjectivesService = {
         });
         
         if (!response.ok) {
-          throw new Error("Erreur lors de la mise à jour de la progression");
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData.message || "Erreur lors de la mise à jour de la progression";
+          return {
+            success: false,
+            error: errorMessage
+          };
         }
         
-        return await response.json();
+        const data = await response.json();
+        return {
+          success: true,
+          data
+        };
       } catch (error) {
         console.error("Erreur API:", error);
         return this.updateObjective({ id, progress });
@@ -218,7 +278,7 @@ export const ObjectivesService = {
   /**
    * Met à jour le statut d'un objectif
    */
-  async updateStatus(id: string, status: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED"): Promise<Objective> {
+  async updateStatus(id: string, status: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED"): Promise<{ success: boolean; data?: Objective; error?: string }> {
     if (config.useApi) {
       try {
         const response = await fetch(`/api/goals/${id}`, {
@@ -230,10 +290,19 @@ export const ObjectivesService = {
         });
         
         if (!response.ok) {
-          throw new Error("Erreur lors de la mise à jour du statut");
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData.message || "Erreur lors de la mise à jour du statut";
+          return {
+            success: false,
+            error: errorMessage
+          };
         }
         
-        return await response.json();
+        const data = await response.json();
+        return {
+          success: true,
+          data
+        };
       } catch (error) {
         console.error("Erreur API:", error);
         return this.updateObjective({ id, status });

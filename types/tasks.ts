@@ -5,7 +5,7 @@ export interface Task {
   dueDate: string;
   status: "TODO" | "IN_PROGRESS" | "COMPLETED";
   priority: "LOW" | "MEDIUM" | "HIGH";
-  goalId:String;
+  goalId:string;
   objectiveTitle?: string;
   tags: string[];
 }

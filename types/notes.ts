@@ -8,6 +8,8 @@ export interface Note {
   goalId?: string;
   taskId?: string;
   relatedTaskTitle?: string;
+  tags?: string[];
+  category?: string;
 }
 
 export interface CreateNoteInput {

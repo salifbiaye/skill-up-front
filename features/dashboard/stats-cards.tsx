@@ -39,35 +39,62 @@ export function StatsCards() {
       setIsLoading(true)
       
       try {
+        // Date de référence pour les calculs
+        const thirtyDaysAgo = new Date()
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+        
+        const sevenDaysAgo = new Date()
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+        
         // Objectifs actifs (non terminés)
-        const activeObjectives = objectives.filter(obj => obj.status !== "completed").length
+        const activeObjectives = objectives.filter(obj => obj.status !== "COMPLETED").length
         
-        // Changement dans les objectifs (simulé - dans une vraie API, on aurait des données historiques)
-        const objectivesChange = Math.round(Math.random() * 2) // Simulé pour l'instant
+        // Changement dans les objectifs (basé sur le statut des objectifs)
+        // On compte les objectifs en cours (IN_PROGRESS) comme indicateur de changement
+        const inProgressObjectives = objectives.filter(obj => obj.status === "IN_PROGRESS").length
+        const objectivesChange = inProgressObjectives
         
-        // Tâches en cours
-        const inProgressTasks = tasks.filter(task => task.status === "in-progress").length
+        // Tâches en cours (inclut les tâches avec statut IN_PROGRESS et les tâches TODO dont la date d'échéance est aujourd'hui ou passée)
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        
+        const inProgressTasks = tasks.filter(task => {
+          // Inclure les tâches avec statut IN_PROGRESS
+          if (task.status === "IN_PROGRESS") return true
+          
+          // Inclure les tâches TODO dont la date d'échéance est aujourd'hui ou passée
+          if (task.status === "TODO") {
+            const dueDate = new Date(task.dueDate)
+            dueDate.setHours(0, 0, 0, 0)
+            return dueDate.getTime() <= today.getTime()
+          }
+          
+          return false
+        }).length
         
         // Tâches à faire aujourd'hui (avec date d'échéance aujourd'hui)
-        const today = new Date().toISOString().split('T')[0]
         const todayTasks = tasks.filter(task => {
-          // Dans une vraie implémentation, on comparerait les dates correctement
-          // Pour l'instant, on prend un sous-ensemble aléatoire des tâches en cours
-          return task.status !== "completed" && Math.random() > 0.7
+          if (task.status === "COMPLETED") return false
+          
+          const dueDate = new Date(task.dueDate)
+          dueDate.setHours(0, 0, 0, 0)
+          return dueDate.getTime() === today.getTime()
         }).length
         
         // Nombre total de notes
         const totalNotes = notes.length
         
-        // Changement dans les notes (simulé)
-        const notesChange = Math.round(Math.random() * 5)
+        // Changement dans les notes (basé sur le nombre de notes avec des objectifs associés)
+        // On compte les notes qui ont un objectif associé comme indicateur de changement
+        const notesWithObjectives = notes.filter(note => note.goalId).length
+        const notesChange = notesWithObjectives
         
         // Progression moyenne des objectifs
         let totalProgress = 0
         let completedObjectives = 0
         
         objectives.forEach(obj => {
-          if (obj.status === "completed") {
+          if (obj.status === "COMPLETED") {
             totalProgress += 100
             completedObjectives++
           } else if (obj.progress !== undefined) {
@@ -79,8 +106,14 @@ export function StatsCards() {
           ? Math.round(totalProgress / objectives.length) 
           : 0
         
-        // Changement dans la progression (simulé)
-        const progressChange = Math.round(Math.random() * 15)
+        // Changement dans la progression (basé sur les objectifs complétés)
+        // On utilise le pourcentage d'objectifs complétés comme indicateur de changement
+        let progressChange = 0
+        if (objectives.length > 0) {
+          progressChange = Math.round((completedObjectives / objectives.length) * 100)
+        }
+        
+        // progressChange a déjà été défini plus haut
         
         setStats({
           activeObjectives,
@@ -131,7 +164,7 @@ export function StatsCards() {
         <CardContent>
           <div className="text-2xl font-bold">{stats.activeObjectives}</div>
           <p className="text-xs text-muted-foreground">
-            {stats.objectivesChange > 0 ? `+${stats.objectivesChange}` : stats.objectivesChange} depuis le mois dernier
+            {stats.objectivesChange > 0 ? `${stats.objectivesChange} en cours` : 'Aucun en cours'}
           </p>
         </CardContent>
       </Card>
@@ -142,7 +175,9 @@ export function StatsCards() {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats.inProgressTasks}</div>
-          <p className="text-xs text-muted-foreground">{stats.todayTasks} tâches à faire aujourd'hui</p>
+          <p className="text-xs text-muted-foreground">
+            {stats.todayTasks > 0 ? `${stats.todayTasks} pour aujourd'hui` : 'Aucune pour aujourd\'hui'}
+          </p>
         </CardContent>
       </Card>
       <Card>
@@ -153,7 +188,7 @@ export function StatsCards() {
         <CardContent>
           <div className="text-2xl font-bold">{stats.totalNotes}</div>
           <p className="text-xs text-muted-foreground">
-            +{stats.notesChange} depuis la semaine dernière
+            {stats.notesChange > 0 ? `${stats.notesChange} avec objectifs` : 'Aucune avec objectifs'}
           </p>
         </CardContent>
       </Card>
@@ -165,7 +200,7 @@ export function StatsCards() {
         <CardContent>
           <div className="text-2xl font-bold">{stats.averageProgress}%</div>
           <p className="text-xs text-muted-foreground">
-            +{stats.progressChange}% depuis le mois dernier
+            {stats.progressChange > 0 ? `${stats.progressChange}% d'objectifs complétés` : 'Aucun objectif complété'}
           </p>
         </CardContent>
       </Card>

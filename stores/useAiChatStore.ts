@@ -33,7 +33,7 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
       // Ne pas retourner de données pour correspondre au type Promise<void>
     } catch (err) {
       const errorMessage = "Erreur lors du chargement des sessions de chat";
-      console.error(errorMessage, err);
+
       set({ error: errorMessage });
       throw err;
     } finally {
@@ -49,7 +49,7 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
       return session;
     } catch (err) {
       const errorMessage = "Erreur lors du chargement de la session de chat";
-      console.error(errorMessage, err);
+
       set({ error: errorMessage });
       throw err;
     } finally {
@@ -71,7 +71,7 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
       return newSession;
     } catch (err) {
       const errorMessage = "Erreur lors de la création de la session de chat";
-      console.error(errorMessage, err);
+
       set({ error: errorMessage });
       throw err;
     } finally {
@@ -104,7 +104,7 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
       return updatedSession;
     } catch (err) {
       const errorMessage = "Erreur lors de la mise à jour de la session de chat";
-      console.error(errorMessage, err);
+
       set({ error: errorMessage });
       throw err;
     } finally {
@@ -135,7 +135,7 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
       return true;
     } catch (err) {
       const errorMessage = "Erreur lors de la suppression de la session de chat";
-      console.error(errorMessage, err);
+
       set({ error: errorMessage });
       throw err;
     } finally {
@@ -219,7 +219,7 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
       return userMessage;
     } catch (err) {
       const errorMessage = "Erreur lors de l'envoi du message";
-      console.error(errorMessage, err);
+
       set({ error: errorMessage });
       throw err;
     } finally {

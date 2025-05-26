@@ -6,7 +6,8 @@ import {
   MessageSquare,
   Settings,
   User,
-  DoorClosedIcon
+  DoorClosedIcon,
+  Award
 } from "lucide-react"
 
 export const dashboardConfig = {
@@ -35,6 +36,11 @@ export const dashboardConfig = {
       title: "Chat IA",
       href: "/ai-chat",
       icon: <MessageSquare className="h-5 w-5" />,
+    },
+    {
+      title: "Trophées",
+      href: "/achievements",
+      icon: <Award className="h-5 w-5" />,
     },
     {
       title: "Profil",

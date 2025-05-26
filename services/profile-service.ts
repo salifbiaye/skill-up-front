@@ -11,15 +11,22 @@ const config = {
 // Données fictives pour le profil utilisateur
 const mockUserProfile: UserProfile = {
   id: "1",
-  name: "Jean Dupont",
+  userId: "user-123",
+  fullName: "Jean Dupont",
   email: "jean.dupont@example.com",
-  avatar: "/avatars/user.png",
   bio: "Étudiant en informatique passionné par le développement web et l'intelligence artificielle.",
+  location: "Paris, France",
+  occupation: "Étudiant en informatique",
+  avatarUrl: "", // Vide pour afficher les initiales
+  createdAt: "2025-01-15T10:00:00",
+  updatedAt: "2025-05-20T14:30:00",
+  
+  // Champs additionnels pour l'interface utilisateur
   role: "Étudiant",
   skills: ["JavaScript", "React", "Node.js", "Python", "Machine Learning"],
   joinedAt: "2025-01-15",
   preferences: {
-    theme: "system",
+    theme: "system" as const,
     notifications: true,
     emailNotifications: false,
     language: "fr",
@@ -37,7 +44,12 @@ export const ProfileService = {
   async getCurrentUserProfile(): Promise<UserProfile> {
     if (config.useApi) {
       try {
-        const response = await fetch(`${config.baseUrl}${config.endpoints.base}`);
+        const response = await fetch(`/api/profile`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
         if (!response.ok) {
           throw new Error("Erreur lors de la récupération du profil utilisateur");
         }
@@ -58,7 +70,7 @@ export const ProfileService = {
   async updateProfile(profileData: UpdateProfileInput): Promise<UserProfile> {
     if (config.useApi) {
       try {
-        const response = await fetch(`${config.baseUrl}${config.endpoints.base}`, {
+        const response = await fetch(`/api/profile`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -94,7 +106,7 @@ export const ProfileService = {
   async updatePreferences(preferencesData: UpdatePreferencesInput): Promise<UserProfile> {
     if (config.useApi) {
       try {
-        const response = await fetch(`${config.baseUrl}${config.endpoints.base}/preferences`, {
+        const response = await fetch(`/api/profile/preferences`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -139,7 +151,7 @@ export const ProfileService = {
         const formData = new FormData();
         formData.append("avatar", file);
         
-        const response = await fetch(`${config.baseUrl}${config.endpoints.base}/avatar`, {
+        const response = await fetch(`/api/profile/avatar`, {
           method: "POST",
           body: formData,
         });
@@ -167,7 +179,7 @@ export const ProfileService = {
   async changePassword(currentPassword: string, newPassword: string): Promise<boolean> {
     if (config.useApi) {
       try {
-        const response = await fetch(`${config.baseUrl}${config.endpoints.changePassword}`, {
+        const response = await fetch(`/api/profile/password`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -188,5 +200,58 @@ export const ProfileService = {
     
     // Simuler un changement de mot de passe réussi
     return Promise.resolve(true);
+  },
+
+  /**
+   * Récupère les statistiques de l'utilisateur
+   */
+  async getUserStats(): Promise<any> {
+    if (config.useApi) {
+      try {
+        const response = await fetch(`/api/profile/stats`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        
+        if (!response.ok) {
+          throw new Error("Erreur lors de la récupération des statistiques");
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error("Erreur API:", error);
+        // Retourner des statistiques fictives en cas d'erreur
+        return {
+          totalObjectives: 5,
+          completedObjectives: 2,
+          inProgressObjectives: 3,
+          totalTasks: 12,
+          completedTasks: 8,
+          inProgressTasks: 3,
+          overdueTasks: 1,
+          totalNotes: 7,
+          notesWithAiSummary: 3,
+          joinedDays: 30,
+          lastUpdated: new Date().toISOString()
+        };
+      }
+    }
+    
+    // Retourner des statistiques fictives si l'API n'est pas activée
+    return Promise.resolve({
+      totalObjectives: 5,
+      completedObjectives: 2,
+      inProgressObjectives: 3,
+      totalTasks: 12,
+      completedTasks: 8,
+      inProgressTasks: 3,
+      overdueTasks: 1,
+      totalNotes: 7,
+      notesWithAiSummary: 3,
+      joinedDays: 30,
+      lastUpdated: new Date().toISOString()
+    });
   },
 };

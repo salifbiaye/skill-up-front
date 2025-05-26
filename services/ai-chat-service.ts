@@ -62,7 +62,7 @@ export const AiChatService = {
    */
   async createChatSession(sessionData: CreateChatSessionInput): Promise<ChatSession> {
     const now = new Date().toISOString();
-    console.log("New chat session created:",  JSON.stringify(sessionData))
+
     if (config.useApi) {
       try {
         const response = await fetch(`/api/chat-sessions`, {
@@ -228,7 +228,7 @@ export const AiChatService = {
     const parsedMessage = {
       ...messageDataWithoutSessionId,
     };
-    console.log("Sending message:", JSON.stringify(parsedMessage));
+
     if (config.useApi) {
       try {
         const response = await fetch(`/api/chat-sessions/${messageData.sessionId}/messages`, {
@@ -282,9 +282,7 @@ export const AiChatService = {
    */
   async getAssistantResponse(sessionId: string, messageId: string, messageType?: string, metadata?: any): Promise<ChatMessage> {
     const now = new Date().toISOString();
-    console.log("Generating assistant response for session:", sessionId, "messageId:", messageId, "messageType:", messageType, "metadata:", metadata)
-    // Récupérer la session pour avoir le contexte complet
-    const session = await this.getChatSessionById(sessionId);
+  const session = await this.getChatSessionById(sessionId);
     
     // Trouver le message spécifique par son ID
     const userMessageById = session?.messages.find(m => m.id === messageId);

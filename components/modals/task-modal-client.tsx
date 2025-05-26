@@ -51,6 +51,7 @@ export function TaskModalClient({
         // Mode édition: remplir avec les données de la tâche
         setTaskTitle(task.title);
         setDescription(task.description);
+
         
         // Extraire la date et l'heure si disponible
         if (task.dueDate) {
@@ -67,6 +68,7 @@ export function TaskModalClient({
         }
         
         setPriority(task.priority);
+        setGoalId(task.goalId);
 
       } else {
         // Mode création: réinitialiser les champs

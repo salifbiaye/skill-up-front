@@ -74,11 +74,23 @@ export async function PUT(
         const backendUrl = `${API_BASE_URL}/notes/${idparam}`;
         const body = await request.text();
         const {id, ...data} = JSON.parse(body);
+        
+        // Supprimer goalId et taskId s'ils sont vides
+        if (data.goalId === "" || data.goalId === undefined || data.goalId === null) {
+            delete data.goalId;
+        }
+        
+        if (data.taskId === "" || data.taskId === undefined || data.taskId === null) {
+            delete data.taskId;
+        }
+        delete data.goalTitle;
+        delete data.taskTitle;
+        delete data.createdAt;
+        delete data.updatedAt;
+        
         const requestBody = JSON.stringify({
             ...data,
-
         });
-
 
         // Appel au backend
         const response = await fetch(backendUrl, {
@@ -165,9 +177,8 @@ export async function DELETE(
     request: NextRequest,
     { params }: { params: { id: string } }
 ) {
-    const param = await params
+    const param = await params;
     try {
-        // Récupération du token
         const token = request.cookies.get('auth-token')?.value;
         if (!token) {
             return NextResponse.json(
@@ -177,10 +188,8 @@ export async function DELETE(
         }
 
         const id = param.id;
-        // Construction de l'URL backend
         const backendUrl = `${API_BASE_URL}/notes/${id}`;
 
-        // Appel au backend
         const response = await fetch(backendUrl, {
             method: 'DELETE',
             headers: {
@@ -197,12 +206,17 @@ export async function DELETE(
             );
         }
 
-        return NextResponse.json(await response.json());
+        // Modification clé : Ne pas parser la réponse si elle est vide (204)
+        if (response.status === 204) {
+            return new NextResponse(null, { status: 204 });
+        } else {
+            return NextResponse.json(await response.json());
+        }
     } catch (error) {
         console.error("API Error:", error);
         return NextResponse.json(
             { error: `Backend unreachable: ${error instanceof Error ? error.message : String(error)}` },
-            { status: 502 }
+            { status: 500 } // 502 → 500 (car 502 est réservé aux erreurs de proxy)
         );
     }
 }

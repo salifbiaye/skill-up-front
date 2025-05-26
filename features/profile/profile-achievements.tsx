@@ -47,27 +47,31 @@ export function ProfileAchievements() {
       
       try {
         // Définir les achievements avec les données réelles
-        const completedObjectives = objectives.filter(obj => obj.status === "completed").length
-        const completedTasks = tasks.filter(task => task.status === "completed").length
+        const completedObjectives = objectives.filter(obj => obj.status === "COMPLETED").length
+        const completedTasks = tasks.filter(task => task.status === "COMPLETED").length
         const notesWithAiSummary = notes.filter(note => note.hasAiSummary).length
         const aiChatCount = chatSessions.length
         
-        // Calcul de la note moyenne des objectifs (simulé pour l'instant)
-        // Note: nous simulons la notation car elle n'est pas encore implémentée dans le type Objective
-        const objectivesWithRating = objectives.filter(obj => obj.status === "completed")
+        // Calcul de la note moyenne des objectifs basée sur la progression
+        const objectivesWithRating = objectives.filter(obj => obj.status === "COMPLETED")
         const averageRating = objectivesWithRating.length > 0
-          ? 16 // Valeur simulée pour l'instant
+          ? Math.round(objectivesWithRating.reduce((sum, obj) => sum + (obj.progress || 0), 0) / objectivesWithRating.length * 20 / 100)
           : 0
         
-        // Calcul des tâches complétées sans retard (simulé pour l'instant)
-        const tasksCompletedOnTime = tasks.filter(task => 
-          task.status === "completed" && Math.random() > 0.2 // Simulé pour l'instant
-        ).length
+        // Calcul des tâches complétées sans retard (basé sur la date d'échéance)
+        const tasksCompletedOnTime = tasks.filter(task => {
+          if (task.status !== "COMPLETED") return false
+          
+          // Considérer que la tâche a été complétée à temps si sa date d'échéance est aujourd'hui ou dans le futur
+          const dueDate = new Date(task.dueDate)
+          const today = new Date()
+          return dueDate >= today
+        }).length
         
         // Générer la date de déverrouillage (pour les achievements débloqués)
         const generateUnlockDate = () => {
+          // Utiliser la date actuelle pour tous les achievements débloqués
           const date = new Date()
-          date.setDate(date.getDate() - Math.floor(Math.random() * 60)) // Date aléatoire dans les 60 derniers jours
           return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
         }
         

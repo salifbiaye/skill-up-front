@@ -49,6 +49,13 @@ export function NoteModal({ isOpen, onClose, onSubmit, note, title }: NoteModalP
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Vérifier si un objectif est sélectionné mais pas de tâche
+    if (formData.goalId && !formData.taskId) {
+      setError("Vous devez sélectionner une tâche lorsqu'un objectif est choisi");
+      return;
+    }
+    
     setIsSubmitting(true);
     setError(null);
     
@@ -101,28 +108,36 @@ export function NoteModal({ isOpen, onClose, onSubmit, note, title }: NoteModalP
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="goalId">Objectif associé (optionnel)</Label>
+            <Label htmlFor="goalId">Objectif associé {note ? "" : "(optionnel)"}</Label>
             <Input
               id="goalId"
               name="goalId"
               value={formData.goalId || ""}
               onChange={handleChange}
               placeholder="Objectif associé à cette note"
+              disabled={!!note} // Désactiver si c'est une note existante
+              readOnly={!!note} // Lecture seule si c'est une note existante
             />
+            {note && formData.goalId && (
+              <p className="text-xs text-muted-foreground mt-1">L'objectif ne peut pas être modifié pour une note existante</p>
+            )}
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="taskId">Tâche associée (optionnel)</Label>
+            <Label htmlFor="taskId">
+              Tâche associée {note ? "" : formData.goalId ? "(obligatoire)" : "(optionnel)"}
+            </Label>
             <select
               id="taskId"
               name="taskId"
               value={formData.taskId || ""}
               onChange={handleChange}
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              disabled={!formData.goalId}
+              disabled={!!note || !formData.goalId} // Désactiver si c'est une note existante ou pas d'objectif
+              required={!note && !!formData.goalId} // Obligatoire seulement pour nouvelle note avec objectif
             >
               <option value="">{!formData.goalId ? "Sélectionnez d'abord un objectif" : "Sélectionner une tâche"}</option>
-              {formData.goalId && tasks
+              {!note && formData.goalId && tasks
                 .filter(task => 
                   task.status !== "COMPLETED" && 
                   task.goalId === formData.goalId
@@ -132,15 +147,21 @@ export function NoteModal({ isOpen, onClose, onSubmit, note, title }: NoteModalP
                     {task.title}
                   </option>
                 ))}
-              {formData.goalId && tasks.filter(task =>
+              {!note && formData.goalId && tasks.filter(task =>
                 task.status !== "COMPLETED" && 
                 task.goalId === formData.goalId
               ).length === 0 && (
                 <option value="" disabled>Aucune tâche disponible pour cet objectif</option>
               )}
             </select>
-            {!formData.goalId && (
+            {!note && !formData.goalId && (
               <p className="text-xs text-muted-foreground mt-1">Vous devez d'abord sélectionner un objectif pour associer une tâche</p>
+            )}
+            {!note && formData.goalId && !formData.taskId && (
+              <p className="text-xs text-red-500 mt-1">Vous devez sélectionner une tâche lorsqu'un objectif est choisi</p>
+            )}
+            {note && formData.taskId && (
+              <p className="text-xs text-muted-foreground mt-1">La tâche ne peut pas être modifiée pour une note existante</p>
             )}
           </div>
           

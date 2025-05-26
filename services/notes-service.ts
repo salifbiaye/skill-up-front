@@ -53,7 +53,9 @@ export const NotesService = {
           },
         });
         if (!response.ok) {
-          throw new Error("Erreur lors de la récupération de la note");
+          console.error("Erreur lors de la récupération de la note");
+          // Fallback aux données fictives en cas d'erreur
+          return notesData.find(note => note.id === id);
         }
         return await response.json();
       } catch (error) {
@@ -70,7 +72,7 @@ export const NotesService = {
   /**
    * Crée une nouvelle note
    */
-  async createNote(noteData: CreateNoteInput): Promise<Note> {
+  async createNote(noteData: CreateNoteInput): Promise<{ success: boolean; data?: Note; error?: string }> {
     if (config.useApi) {
       try {
         const response = await fetch(`/api/notes`, {
@@ -82,24 +84,25 @@ export const NotesService = {
         });
         
         if (!response.ok) {
-          throw new Error("Erreur lors de la création de la note");
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData.message || "Erreur lors de la création de la note";
+          return {
+            success: false,
+            error: errorMessage
+          };
         }
         
-        return await response.json();
+        const data = await response.json();
+        return {
+          success: true,
+          data
+        };
       } catch (error) {
         console.error("Erreur API:", error);
-        // Créer une note fictive avec un ID généré
-        const newNote: Note = {
-          id: Date.now().toString(),
-          ...noteData,
-          createdAt: new Date().toLocaleDateString("fr-FR", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          }),
-          hasAiSummary: false,
+        return {
+          success: false,
+          error: "Erreur lors de la communication avec le serveur"
         };
-        return newNote;
       }
     }
     
@@ -115,13 +118,16 @@ export const NotesService = {
       hasAiSummary: false,
     };
     
-    return Promise.resolve(newNote);
+    return {
+      success: true,
+      data: newNote
+    };
   },
 
   /**
    * Met à jour une note existante
    */
-  async updateNote(noteData: UpdateNoteInput): Promise<Note> {
+  async updateNote(noteData: UpdateNoteInput): Promise<{ success: boolean; data?: Note; error?: string }> {
     if (config.useApi) {
       try {
         const response = await fetch(`/api/notes/${noteData.id}`, {
@@ -133,21 +139,33 @@ export const NotesService = {
         });
         
         if (!response.ok) {
-          throw new Error("Erreur lors de la mise à jour de la note");
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData.message || "Erreur lors de la mise à jour de la note";
+          return {
+            success: false,
+            error: errorMessage
+          };
         }
         
-        return await response.json();
+        const data = await response.json();
+        return {
+          success: true,
+          data
+        };
       } catch (error) {
         console.error("Erreur API:", error);
-        // Simuler une mise à jour avec les données fictives
+        // Vérifier si la note existe
         const existingNote = notesData.find(note => note.id === noteData.id);
         if (!existingNote) {
-          throw new Error("Note non trouvée");
+          return {
+            success: false,
+            error: "Note non trouvée"
+          };
         }
         
         return {
-          ...existingNote,
-          ...noteData,
+          success: false,
+          error: "Erreur lors de la communication avec le serveur"
         };
       }
     }
@@ -155,19 +173,28 @@ export const NotesService = {
     // Simuler une mise à jour avec les données fictives
     const existingNote = notesData.find(note => note.id === noteData.id);
     if (!existingNote) {
-      throw new Error("Note non trouvée");
+      return {
+        success: false,
+        error: "Note non trouvée"
+      };
     }
     
-    return Promise.resolve({
+    const updatedNote = {
       ...existingNote,
       ...noteData,
-    });
+    };
+    
+    return {
+      success: true,
+      data: updatedNote
+    };
   },
 
   /**
    * Supprime une note
    */
-  async deleteNote(id: string): Promise<boolean> {
+  async deleteNote(id: string): Promise<{ success: boolean; error?: string }> {
+    
     if (config.useApi) {
       try {
         const response = await fetch(`/api/notes/${id}`, {
@@ -175,24 +202,33 @@ export const NotesService = {
         });
         
         if (!response.ok) {
-          throw new Error("Erreur lors de la suppression de la note");
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData.message || "Erreur lors de la suppression de la note";
+          return {
+            success: false,
+            error: errorMessage
+          };
         }
         
-        return true;
+        return { success: true };
       } catch (error) {
         console.error("Erreur API:", error);
-        return true; // Simuler une suppression réussie
+        return {
+          success: false,
+          error: "Erreur lors de la communication avec le serveur"
+        };
       }
     }
     
-    // Simuler une suppression réussie
-    return Promise.resolve(true);
+    // Simuler une suppression réussie avec les données fictives
+    return { success: true };
   },
 
   /**
    * Génère un résumé IA pour une note
    */
-  async generateAiSummary(id: string): Promise<Note> {
+  async generateAiSummary(id: string): Promise<{ success: boolean; data?: Note; error?: string }> {
+    
     if (config.useApi) {
       try {
         const response = await fetch(`${config.baseUrl}${config.endpoints.aiSummary(id)}`, {
@@ -200,21 +236,24 @@ export const NotesService = {
         });
         
         if (!response.ok) {
-          throw new Error("Erreur lors de la génération du résumé IA");
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData.message || "Erreur lors de la génération du résumé IA";
+          return {
+            success: false,
+            error: errorMessage
+          };
         }
         
-        return await response.json();
+        const data = await response.json();
+        return {
+          success: true,
+          data
+        };
       } catch (error) {
         console.error("Erreur API:", error);
-        // Simuler une mise à jour avec les données fictives
-        const existingNote = notesData.find(note => note.id === id);
-        if (!existingNote) {
-          throw new Error("Note non trouvée");
-        }
-        
         return {
-          ...existingNote,
-          hasAiSummary: true,
+          success: false,
+          error: "Erreur lors de la communication avec le serveur"
         };
       }
     }
@@ -222,12 +261,20 @@ export const NotesService = {
     // Simuler une mise à jour avec les données fictives
     const existingNote = notesData.find(note => note.id === id);
     if (!existingNote) {
-      throw new Error("Note non trouvée");
+      return {
+        success: false,
+        error: "Note non trouvée"
+      };
     }
     
-    return Promise.resolve({
+    const updatedNote = {
       ...existingNote,
       hasAiSummary: true,
-    });
+    };
+    
+    return {
+      success: true,
+      data: updatedNote
+    };
   },
 };

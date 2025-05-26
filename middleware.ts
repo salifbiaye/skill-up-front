@@ -28,7 +28,7 @@ export function middleware(request: NextRequest) {
   if (pathname.startsWith('/api/') && isAuthenticated) {
     const requestHeaders = new Headers(request.headers)
     requestHeaders.set('Authorization', `Bearer ${authToken}`)
-    console.log("Auth header:", requestHeaders); // Debugging line
+
     
     return NextResponse.next({
       request: {
