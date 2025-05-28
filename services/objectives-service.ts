@@ -1,6 +1,7 @@
 import { Objective, CreateObjectiveInput, UpdateObjectiveInput } from "@/types/objectives";
 import { objectivesData } from "@/data/objectives-data";
 import { API_CONFIG } from "@/config/api";
+import {toast} from "sonner";
 
 
 // Utiliser la configuration centralisée
@@ -52,7 +53,7 @@ export const ObjectivesService = {
       try {
         const response = await fetch(`/api/goals/${id}`);
         if (!response.ok) {
-          console.error("Erreur lors de la récupération de l'objectif");
+          toast.error("Erreur lors de la récupération de l'objectif");
           // Fallback aux données fictives en cas d'erreur
           return objectivesData.find(objective => objective.id === id);
         }

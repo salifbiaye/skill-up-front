@@ -15,7 +15,6 @@ export interface CreateObjectiveInput {
   title: string;
   description: string;
   dueDate: string;
-  priority: "low" | "medium" | "high";
 }
 
 export interface UpdateObjectiveInput extends Partial<CreateObjectiveInput> {

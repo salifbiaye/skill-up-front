@@ -136,7 +136,6 @@ export function ProfileAchievements() {
         
         setAchievements(calculatedAchievements)
       } catch (error) {
-        console.error("Erreur lors du calcul des achievements:", error)
       } finally {
         setIsLoading(false)
       }

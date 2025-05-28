@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { UpdateProfileInput } from "@/types/profile"
+import {toast} from "sonner";
 
 export function ProfileInfo() {
   const profile = useProfileStore(state => state.profile)
@@ -98,7 +99,7 @@ export function ProfileInfo() {
       
       setIsEditDialogOpen(false)
     } catch (error) {
-      console.error("Erreur lors de la mise à jour du profil:", error)
+     toast.error("Erreur lors de la mise à jour du profil. Veuillez réessayer plus tard.")
     } finally {
       setIsSubmitting(false)
     }
@@ -164,8 +165,8 @@ export function ProfileInfo() {
         </div>
         <CardDescription>Vos informations de profil</CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col items-center text-center pb-6">
-        <Avatar className="h-24 w-24 mb-4">
+      <CardContent className="flex flex-col items-center  text-center pb-6">
+        <Avatar className=" h-24 w-24 mb-4">
           <AvatarFallback className="text-xl">{getInitials(profile.fullName || '')}</AvatarFallback>
         </Avatar>
         <h3 className="text-xl font-bold">{profile.fullName}</h3>

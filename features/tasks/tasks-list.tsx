@@ -13,6 +13,7 @@ import { TaskItem } from "@/features/tasks/task-item";
 import { useTasksStore } from "@/stores/useTasksStore";
 import { EmptyTasks } from "@/components/empty-states/empty-tasks";
 import { Plus } from "lucide-react";
+import {TasksHeader} from "@/features/tasks/tasks-header";
 
 export function TasksList() {
   const { tasks, isLoading, error, fetchTasks, createTask, updateTask, deleteTask, updateStatus } = useTasksStore()
@@ -20,7 +21,7 @@ export function TasksList() {
   // Charger les tâches au montage du composant
   useEffect(() => {
     fetchTasks().catch(err => {
-      console.error("Erreur lors du chargement des tâches:", err);
+        toast.error("Impossible de charger les tâches. Veuillez réessayer plus tard.");
     });
   }, [fetchTasks])
 
@@ -87,7 +88,6 @@ export function TasksList() {
         }
       }
     } catch (error) {
-      console.error("Erreur lors de la soumission:", error);
       toast("Une erreur est survenue lors de l'opération.")
       // Ne pas fermer le modal en cas d'erreur
     }
@@ -143,14 +143,7 @@ export function TasksList() {
   if (tasks.length === 0) {
     return (
       <>
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Tâches</h2>
-          <Button onClick={handleOpenCreateModal}>
-            <Plus className="mr-2 h-4 w-4" />
-            Nouvelle tâche
-          </Button>
-        </div>
-        
+        <TasksHeader handleOpenCreateModal={handleOpenCreateModal}/>
         <Card className="mt-6">
           <CardContent className="pt-6">
             <EmptyTasks 
@@ -174,13 +167,7 @@ export function TasksList() {
 
   return (
     <>
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Tâches</h2>
-        <Button onClick={handleOpenCreateModal}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nouvelle tâche
-        </Button>
-      </div>
+     <TasksHeader handleOpenCreateModal={handleOpenCreateModal}/>
 
       <Card className="mt-6">
         <CardHeader>

@@ -100,6 +100,76 @@
   @apply text-primary underline hover:text-primary/80;
 }
 
+/* Styles pour le Markdown dans le chat */
+.markdown-chat {
+  @apply text-sm leading-relaxed break-words overflow-x-hidden;
+}
+
+.markdown-chat p {
+  @apply my-2 break-words;
+}
+
+.markdown-chat h1 {
+  @apply text-xl font-bold mt-3 mb-2;
+}
+
+.markdown-chat h2 {
+  @apply text-lg font-bold mt-2 mb-2;
+}
+
+.markdown-chat h3 {
+  @apply text-base font-bold mt-2 mb-1;
+}
+
+.markdown-chat h4 {
+  @apply text-sm font-bold mt-2 mb-1;
+}
+
+.markdown-chat ul {
+  @apply list-disc pl-5 my-2;
+}
+
+.markdown-chat ol {
+  @apply list-decimal pl-5 my-2;
+}
+
+.markdown-chat li {
+  @apply my-1;
+}
+
+.markdown-chat a {
+  @apply text-primary underline hover:text-primary/80;
+}
+
+.markdown-chat pre {
+  @apply overflow-x-auto p-2 my-2 text-xs rounded-md bg-muted max-w-full;
+}
+
+.markdown-chat code {
+  @apply text-xs px-1 py-0.5 rounded bg-muted;
+}
+
+/* Code inline dans un paragraphe */
+.markdown-chat p code {
+  @apply bg-muted text-xs px-1 py-0.5 rounded;
+}
+
+.markdown-chat table {
+  @apply w-full border-collapse my-2 max-w-full;
+}
+
+.markdown-chat th, .markdown-chat td {
+  @apply border px-2 py-1 text-xs;
+}
+
+.markdown-chat img {
+  @apply max-w-full h-auto my-2 rounded;
+}
+
+.markdown-chat blockquote {
+  @apply border-l-4 pl-3 italic my-2;
+}
+
 .markdown-content blockquote {
   @apply border-l-4 border-muted pl-4 italic my-4;
 }

@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ModeToggle } from "@/components/mode-toggle"
-import { GraduationCap, ArrowRight } from "lucide-react"
+import { GraduationCap, ArrowRight, Brain, ListChecks, BookOpen } from "lucide-react"
 
 export default function Home() {
   return (
@@ -19,8 +19,8 @@ export default function Home() {
             <Link href="#features" className="text-sm font-medium transition-colors hover:text-primary">
               Fonctionnalités
             </Link>
-            <Link href="#testimonials" className="text-sm font-medium transition-colors hover:text-primary">
-              Témoignages
+            <Link href="#how-it-works" className="text-sm font-medium transition-colors hover:text-primary">
+              Comment ça marche
             </Link>
           </nav>
           <div className="flex items-center gap-4">
@@ -56,17 +56,6 @@ export default function Home() {
                 </Button>
               </Link>
             </div>
-            <div className="mt-16 relative w-full max-w-4xl">
-              <div className="aspect-[16/9] rounded-lg overflow-hidden shadow-2xl border">
-                <img
-                  src="/placeholder.svg?height=720&width=1280"
-                  alt="SkillUp Dashboard"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-accent/10 rounded-full blur-3xl"></div>
-              <div className="absolute -top-6 -left-6 w-32 h-32 bg-primary/10 rounded-full blur-3xl"></div>
-            </div>
           </div>
         </section>
 
@@ -81,241 +70,161 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="flex flex-col items-start p-6 bg-background rounded-lg border">
                 <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                  <svg className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                    />
-                  </svg>
+                  <BookOpen className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">Objectifs intelligents</h3>
+                <h3 className="text-xl font-bold mb-2">Prise de notes intelligente</h3>
                 <p className="text-muted-foreground mb-4">
-                  Définissez des objectifs clairs avec des échéances et suivez votre progression en temps réel.
+                  Organisez vos notes d'études avec support Markdown et générez des résumés avec l'IA.
                 </p>
                 <Link href="/register" className="text-primary font-medium flex items-center mt-auto">
-                  En savoir plus <ArrowRight className="ml-1 h-4 w-4" />
+                  Essayer <ArrowRight className="ml-1 h-4 w-4" />
                 </Link>
               </div>
               <div className="flex flex-col items-start p-6 bg-background rounded-lg border">
                 <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center mb-4">
-                  <svg className="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
+                  <ListChecks className="h-6 w-6 text-accent" />
                 </div>
                 <h3 className="text-xl font-bold mb-2">Gestion des tâches</h3>
                 <p className="text-muted-foreground mb-4">
-                  Organisez votre travail en tâches planifiées et suivez votre progression étape par étape.
+                  Planifiez vos tâches d'apprentissage, définissez des échéances et suivez votre progression.
                 </p>
                 <Link href="/register" className="text-primary font-medium flex items-center mt-auto">
-                  En savoir plus <ArrowRight className="ml-1 h-4 w-4" />
+                  Essayer <ArrowRight className="ml-1 h-4 w-4" />
                 </Link>
               </div>
               <div className="flex flex-col items-start p-6 bg-background rounded-lg border">
                 <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                  <svg className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
+                  <Brain className="h-6 w-6 text-primary" />
                 </div>
                 <h3 className="text-xl font-bold mb-2">Assistant IA</h3>
                 <p className="text-muted-foreground mb-4">
-                  Utilisez notre IA pour générer des résumés, poser des questions et améliorer votre apprentissage.
+                  Posez des questions, obtenez des explications et générez du contenu avec notre assistant IA.
                 </p>
                 <Link href="/register" className="text-primary font-medium flex items-center mt-auto">
-                  En savoir plus <ArrowRight className="ml-1 h-4 w-4" />
+                  Essayer <ArrowRight className="ml-1 h-4 w-4" />
                 </Link>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="py-20 bg-gradient-to-br from-primary/5 via-accent/5 to-background">
-          <div className="container">
-            <div className="flex flex-col md:flex-row items-center gap-12">
-              <div className="flex-1">
-                <h2 className="text-3xl font-bold mb-6">Comment ça marche</h2>
-                <ol className="space-y-6">
-                  <li className="flex gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                      1
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold">Créez des objectifs d'apprentissage</h3>
-                      <p className="text-muted-foreground mt-2">
-                        Définissez ce que vous voulez accomplir et quand. Notre système vous aide à établir des
-                        objectifs réalistes.
-                      </p>
-                    </div>
-                  </li>
-                  <li className="flex gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
-                      2
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold">Organisez vos tâches</h3>
-                      <p className="text-muted-foreground mt-2">
-                        Divisez votre objectif en tâches gérables. Notre système vous propose une planification
-                        optimale.
-                      </p>
-                    </div>
-                  </li>
-                  <li className="flex gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                      3
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold">Utilisez l'IA pour progresser</h3>
-                      <p className="text-muted-foreground mt-2">
-                        Générez des résumés de vos notes et testez vos connaissances avec des questions personnalisées.
-                      </p>
-                    </div>
-                  </li>
-                </ol>
-              </div>
-              <div className="flex-1 rounded-lg overflow-hidden shadow-lg border">
-                <img src="/placeholder.svg?height=400&width=600" alt="SkillUp en action" className="w-full h-auto" />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="testimonials" className="py-20">
+        <section id="how-it-works" className="py-20 bg-gradient-to-br from-primary/5 via-accent/5 to-background">
           <div className="container">
             <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold">Ce que disent nos utilisateurs</h2>
+              <h2 className="text-3xl font-bold">Comment ça marche</h2>
               <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-                Découvrez comment SkillUp aide les étudiants à atteindre leurs objectifs d'apprentissage.
+                Une approche simple et efficace pour améliorer votre apprentissage
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="bg-background p-6 rounded-lg shadow-sm border">
-                <div className="flex items-center mb-4">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
-                    <span className="text-primary font-bold">T</span>
-                  </div>
-                  <div>
-                    <p className="font-bold">Thomas L.</p>
-                    <p className="text-sm text-muted-foreground">Étudiant en informatique</p>
-                  </div>
+              <div className="bg-background p-6 rounded-lg border flex flex-col items-center text-center">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground mb-4">
+                  1
                 </div>
-                <p className="italic">
-                  "Grâce à SkillUp, j'ai pu organiser mes révisions et obtenir d'excellentes notes à mes examens
-                  d'algorithmique."
+                <h3 className="text-xl font-bold mb-2">Prenez des notes</h3>
+                <p className="text-muted-foreground">
+                  Capturez vos idées et connaissances dans notre éditeur avec support Markdown pour une organisation claire.
                 </p>
               </div>
-              <div className="bg-background p-6 rounded-lg shadow-sm border">
-                <div className="flex items-center mb-4">
-                  <div className="h-10 w-10 rounded-full bg-accent/10 flex items-center justify-center mr-3">
-                    <span className="text-accent font-bold">S</span>
-                  </div>
-                  <div>
-                    <p className="font-bold">Sophie M.</p>
-                    <p className="text-sm text-muted-foreground">Étudiante en médecine</p>
-                  </div>
+              <div className="bg-background p-6 rounded-lg border flex flex-col items-center text-center">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground mb-4">
+                  2
                 </div>
-                <p className="italic">
-                  "Les résumés générés par l'IA m'ont fait gagner un temps précieux. Je recommande vivement cette
-                  plateforme."
+                <h3 className="text-xl font-bold mb-2">Planifiez vos tâches</h3>
+                <p className="text-muted-foreground">
+                  Créez des tâches avec des échéances et suivez votre progression pour rester organisé et productif.
                 </p>
               </div>
-              <div className="bg-background p-6 rounded-lg shadow-sm border">
-                <div className="flex items-center mb-4">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
-                    <span className="text-primary font-bold">L</span>
-                  </div>
-                  <div>
-                    <p className="font-bold">Lucas D.</p>
-                    <p className="text-sm text-muted-foreground">Étudiant en droit</p>
-                  </div>
+              <div className="bg-background p-6 rounded-lg border flex flex-col items-center text-center">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground mb-4">
+                  3
                 </div>
-                <p className="italic">
-                  "La fonction de révision avec l'IA est incroyable. Elle m'a aidé à identifier mes points faibles et à
-                  mieux me préparer."
+                <h3 className="text-xl font-bold mb-2">Utilisez l'IA</h3>
+                <p className="text-muted-foreground">
+                  Posez des questions à notre assistant IA pour approfondir vos connaissances et générer des résumés.
                 </p>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="py-20 bg-gradient-to-br from-primary/5 via-accent/5 to-background">
-          <div className="container text-center">
-            <h2 className="text-3xl font-bold mb-6">Prêt à améliorer votre apprentissage ?</h2>
-            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Rejoignez des milliers d'étudiants qui utilisent SkillUp pour atteindre leurs objectifs académiques.
-            </p>
-            <Link href="/register">
-              <Button size="lg" className="h-12 px-8">
-                Commencer gratuitement
-              </Button>
-            </Link>
+        <section className="py-20 bg-gradient-to-br from-background to-primary/5">
+          <div className="container">
+            <div className="text-center">
+              <h2 className="text-3xl font-bold mb-4">Prêt à améliorer votre apprentissage ?</h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
+                Rejoignez SkillUp aujourd'hui et découvrez comment notre plateforme peut vous aider à atteindre vos objectifs d'apprentissage.
+              </p>
+              <div className="flex flex-wrap justify-center gap-4">
+                <Link href="/register">
+                  <Button size="lg" className="h-12 px-8">
+                    Créer un compte gratuit
+                  </Button>
+                </Link>
+                <Link href="/login">
+                  <Button size="lg" variant="outline" className="h-12 px-8">
+                    Se connecter
+                  </Button>
+                </Link>
+              </div>
+            </div>
           </div>
         </section>
       </main>
-      <footer className="border-t py-12 bg-muted/30">
-        <div className="container grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <GraduationCap className="h-6 w-6 text-primary" />
-              <span className="text-xl font-bold">SkillUp</span>
+      <footer className="border-t bg-background">
+        <div className="container py-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="md:col-span-1">
+              <div className="flex items-center gap-2 mb-4">
+                <GraduationCap className="h-6 w-6 text-primary" />
+                <span className="text-xl font-bold">SkillUp</span>
+              </div>
+              <p className="text-muted-foreground max-w-xs">
+                Votre plateforme d'apprentissage personnel pour atteindre vos objectifs académiques.
+              </p>
             </div>
-            <p className="text-muted-foreground">Améliorez votre apprentissage avec l'IA.</p>
+            <div>
+              <h3 className="font-semibold mb-4">Liens rapides</h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">
+                    Accueil
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#features" className="text-muted-foreground hover:text-foreground transition-colors">
+                    Fonctionnalités
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#how-it-works"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Comment ça marche
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-4">Légal</h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+                    Conditions d'utilisation
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+                    Politique de confidentialité
+                  </Link>
+                </li>
+              </ul>
+            </div>
           </div>
-          <div>
-            <h3 className="font-bold mb-4">Liens rapides</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/" className="text-muted-foreground hover:text-foreground">
-                  Accueil
-                </Link>
-              </li>
-              <li>
-                <Link href="#features" className="text-muted-foreground hover:text-foreground">
-                  Fonctionnalités
-                </Link>
-              </li>
-              <li>
-                <Link href="#testimonials" className="text-muted-foreground hover:text-foreground">
-                  Témoignages
-                </Link>
-              </li>
-            </ul>
+          <div className="mt-6 pt-6 border-t text-center text-muted-foreground">
+            <p>&copy; {new Date().getFullYear()} SkillUp. Tous droits réservés.</p>
           </div>
-          <div>
-            <h3 className="font-bold mb-4">Légal</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link href="#" className="text-muted-foreground hover:text-foreground">
-                  Conditions d'utilisation
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-muted-foreground hover:text-foreground">
-                  Politique de confidentialité
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-muted-foreground hover:text-foreground">
-                  Mentions légales
-                </Link>
-              </li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="font-bold mb-4">Contact</h3>
-            <ul className="space-y-2">
-              <li className="text-muted-foreground">contact@skillup.fr</li>
-              <li className="text-muted-foreground">+33 1 23 45 67 89</li>
-            </ul>
-          </div>
-        </div>
-        <div className="container mt-8 pt-8 border-t">
-          <p className="text-center text-muted-foreground">© 2025 SkillUp. Tous droits réservés.</p>
         </div>
       </footer>
     </div>

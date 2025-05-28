@@ -1,6 +1,7 @@
 import { Note, CreateNoteInput, UpdateNoteInput } from "@/types/notes";
 import { notesData } from "@/data/notes-data";
 import { API_CONFIG } from "@/config/api";
+import {toast} from "sonner";
 
 // Utiliser la configuration centralisée
 const config = {
@@ -27,11 +28,10 @@ export const NotesService = {
           },
         });
         if (!response.ok) {
-          throw new Error("Erreur lors de la récupération des notes");
+         toast.error("Erreur lors de la récupération des notes");
         }
         return await response.json();
       } catch (error) {
-        console.error("Erreur API:", error);
         return notesData; // Fallback aux données fictives en cas d'erreur
       }
     }
@@ -53,7 +53,7 @@ export const NotesService = {
           },
         });
         if (!response.ok) {
-          console.error("Erreur lors de la récupération de la note");
+          toast.error("Erreur lors de la récupération de la note");
           // Fallback aux données fictives en cas d'erreur
           return notesData.find(note => note.id === id);
         }

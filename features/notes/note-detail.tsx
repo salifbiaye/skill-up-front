@@ -10,7 +10,6 @@ import { NoteHeader } from "./components/NoteHeader"
 import { NoteContent } from "./components/NoteContent"
 import { NoteSidebar } from "./components/NoteSidebar"
 import { PdfExportDialog } from "./components/PdfExportDialog"
-import { ShareDialog } from "./components/ShareDialog"
 import { PdfExportService, PdfThemeType } from "./components/pdf"
 
 interface NoteDetailProps {
@@ -30,7 +29,6 @@ export function NoteDetail({ noteId }: NoteDetailProps) {
   
   // États pour les boîtes de dialogue
   const [isPdfThemeModalOpen, setIsPdfThemeModalOpen] = useState(false)
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [selectedPdfTheme, setSelectedPdfTheme] = useState<PdfThemeType>("classic")
   const [useMarkdownInPdf, setUseMarkdownInPdf] = useState(true)
   
@@ -107,17 +105,13 @@ export function NoteDetail({ noteId }: NoteDetailProps) {
     setIsPdfThemeModalOpen(true)
   }
   
-  const handleOpenShare = () => {
-    setIsShareModalOpen(true)
-  }
+
   
   const handleExportPDF = async (theme: string, useMarkdown: boolean) => {
     if (!note) return
     
     // Fermer la boîte de dialogue de sélection de thème
     setIsPdfThemeModalOpen(false)
-    
-
     
     try {
       // Exporter la note en PDF avec le service d'export
@@ -126,7 +120,6 @@ export function NoteDetail({ noteId }: NoteDetailProps) {
         useMarkdownFormat: true
       })
       
-
       if (useMarkdown && viewMode === "markdown") {
         toast.success("Note exportée en PDF avec formatage Markdown")
       } else {
@@ -134,8 +127,37 @@ export function NoteDetail({ noteId }: NoteDetailProps) {
       }
     } catch (error) {
       console.error("Erreur lors de l'export PDF:", error)
-
       toast.error("Une erreur est survenue lors de l'export PDF")
+    }
+  }
+  
+  const handleExportMarkdown = () => {
+    if (!note) return
+    
+    try {
+      // Créer un blob avec le contenu Markdown de la note
+      const blob = new Blob([note.content], { type: 'text/markdown' })
+      
+      // Créer un URL pour le blob
+      const url = URL.createObjectURL(blob)
+      
+      // Créer un élément a pour le téléchargement
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${note.title.replace(/\s+/g, '_')}.md`
+      
+      // Ajouter l'élément au DOM, cliquer dessus, puis le supprimer
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      
+      // Libérer l'URL
+      URL.revokeObjectURL(url)
+      
+      toast.success("Note exportée en Markdown")
+    } catch (error) {
+      console.error("Erreur lors de l'export Markdown:", error)
+      toast.error("Une erreur est survenue lors de l'export Markdown")
     }
   }
 
@@ -179,17 +201,17 @@ export function NoteDetail({ noteId }: NoteDetailProps) {
   }
   
   return (
-    <div className=" mx-auto px-4 py-2">
-      {/* En-tête avec boutons d'action */}
-      <NoteHeader
-        note={note}
-        onGoBack={handleGoBack}
-        onExportPdf={handleOpenPdfExport}
-        onShare={handleOpenShare}
-        onGenerateAiResume={handleGenerateAiResume}
-      />
+    <div className="mx-auto px-4 py-2">
+      <div className="flex flex-col h-full">
+        <NoteHeader
+          note={note}
+          onGoBack={handleGoBack}
+          onExportPdf={handleOpenPdfExport}
+          onExportMarkdown={handleExportMarkdown}
+          onGenerateAiResume={handleGenerateAiResume}
+        />
       
-      <div className="mt-6">
+        <div className="mt-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Colonne principale - 3/4 de l'espace */}
           <div className="lg:col-span-3 space-y-6">
@@ -226,7 +248,7 @@ export function NoteDetail({ noteId }: NoteDetailProps) {
         </div>
       </div>
       
-      {/* Boîte de dialogue pour l'export PDF */}
+      {/* Boîtes de dialogue */}
       <PdfExportDialog
         isOpen={isPdfThemeModalOpen}
         onClose={() => setIsPdfThemeModalOpen(false)}
@@ -237,14 +259,7 @@ export function NoteDetail({ noteId }: NoteDetailProps) {
         onUseMarkdownChange={setUseMarkdownInPdf}
         viewMode={viewMode}
       />
-      
-      {/* Boîte de dialogue pour le partage */}
-      <ShareDialog
-        isOpen={isShareModalOpen}
-        onClose={() => setIsShareModalOpen(false)}
-        noteTitle={note.title}
-        noteId={note.id}
-      />
+      </div>
     </div>
   )
 }

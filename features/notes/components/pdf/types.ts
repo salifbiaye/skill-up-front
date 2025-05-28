@@ -34,6 +34,12 @@ export interface ThemeStyles {
   languageLabelText: [number, number, number]
   marginLeft: number
   contentWidth: number
+  // Propriétés pour les tableaux
+  tableBgColor?: [number, number, number]
+  tableBorderColor?: [number, number, number]
+  tableCellPadding?: number
+  tableLineHeight?: number
+  tableFontSize?: number
 }
 
 // Interface pour un bloc de code

@@ -6,6 +6,7 @@ interface AiChatState {
   chatSessions: ChatSession[];
   currentSession: ChatSession | null;
   isLoading: boolean;
+  loadingSessions: string[]; // IDs des sessions en cours de chargement
   error: string | null;
   
   // Actions
@@ -16,12 +17,14 @@ interface AiChatState {
   deleteChatSession: (id: string) => Promise<boolean>;
   sendMessage: (messageData: SendMessageInput) => Promise<ChatMessage>;
   setCurrentSession: (session: ChatSession | null) => void;
+  isSessionLoading: (sessionId: string) => boolean;
 }
 
 export const useAiChatStore = create<AiChatState>((set, get) => ({
   chatSessions: [],
   currentSession: null,
   isLoading: false,
+  loadingSessions: [],
   error: null,
 
   fetchChatSessions: async () => {
@@ -144,7 +147,11 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
   },
 
   sendMessage: async (messageData: SendMessageInput) => {
-    set({ isLoading: true, error: null });
+    // Ajouter l'ID de la session aux sessions en cours de chargement
+    set(state => ({ 
+      loadingSessions: [...state.loadingSessions, messageData.sessionId],
+      error: null 
+    }));
 
     try {
       // Envoyer le message de l'utilisateur
@@ -152,31 +159,36 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
       
       // Mettre à jour la session avec le nouveau message
       set(state => {
-        if (state.currentSession && state.currentSession.id === messageData.sessionId) {
-          // Vérification robuste pour s'assurer que messages est un tableau
-          const currentMessages = Array.isArray(state.currentSession.messages) 
-            ? state.currentSession.messages 
-            : [];
-          
-          const updatedMessages = [...currentMessages, userMessage];
-          const updatedSession = {
-            ...state.currentSession,
-            messages: updatedMessages,
-            updatedAt: new Date().toISOString(),
-          };
-          
-          // Mettre à jour la liste des sessions
-          const updatedSessions = state.chatSessions.map(session => 
-            session.id === updatedSession.id ? updatedSession : session
-          );
-          
-          return {
-            chatSessions: updatedSessions,
-            currentSession: updatedSession
-          };
-        }
+        // Mettre à jour toutes les sessions, pas seulement la session courante
+        const updatedSessions = state.chatSessions.map(session => {
+          if (session.id === messageData.sessionId) {
+            // Vérification robuste pour s'assurer que messages est un tableau
+            const currentMessages = Array.isArray(session.messages) 
+              ? session.messages 
+              : [];
+            
+            return {
+              ...session,
+              messages: [...currentMessages, userMessage],
+              updatedAt: new Date().toISOString(),
+            };
+          }
+          return session;
+        });
         
-        return state;
+        // Mettre à jour la session courante si c'est celle qui a été modifiée
+        const updatedCurrentSession = state.currentSession && state.currentSession.id === messageData.sessionId
+          ? {
+              ...state.currentSession,
+              messages: [...(Array.isArray(state.currentSession.messages) ? state.currentSession.messages : []), userMessage],
+              updatedAt: new Date().toISOString(),
+            }
+          : state.currentSession;
+        
+        return {
+          chatSessions: updatedSessions,
+          currentSession: updatedCurrentSession
+        };
       });
       
       // Obtenir la réponse de l'assistant en passant l'ID du message au lieu du contenu
@@ -189,31 +201,36 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
       
       // Mettre à jour la session avec la réponse de l'assistant
       set(state => {
-        if (state.currentSession && state.currentSession.id === messageData.sessionId) {
-          // Vérification robuste pour s'assurer que messages est un tableau
-          const currentMessages = Array.isArray(state.currentSession.messages) 
-            ? state.currentSession.messages 
-            : [];
-          
-          const updatedMessages = [...currentMessages, assistantMessage];
-          const updatedSession = {
-            ...state.currentSession,
-            messages: updatedMessages,
-            updatedAt: new Date().toISOString(),
-          };
-          
-          // Mettre à jour la liste des sessions
-          const updatedSessions = state.chatSessions.map(session => 
-            session.id === updatedSession.id ? updatedSession : session
-          );
-          
-          return {
-            chatSessions: updatedSessions,
-            currentSession: updatedSession
-          };
-        }
+        // Mettre à jour toutes les sessions, pas seulement la session courante
+        const updatedSessions = state.chatSessions.map(session => {
+          if (session.id === messageData.sessionId) {
+            // Vérification robuste pour s'assurer que messages est un tableau
+            const currentMessages = Array.isArray(session.messages) 
+              ? session.messages 
+              : [];
+            
+            return {
+              ...session,
+              messages: [...currentMessages, assistantMessage],
+              updatedAt: new Date().toISOString(),
+            };
+          }
+          return session;
+        });
         
-        return state;
+        // Mettre à jour la session courante si c'est celle qui a été modifiée
+        const updatedCurrentSession = state.currentSession && state.currentSession.id === messageData.sessionId
+          ? {
+              ...state.currentSession,
+              messages: [...(Array.isArray(state.currentSession.messages) ? state.currentSession.messages : []), assistantMessage],
+              updatedAt: new Date().toISOString(),
+            }
+          : state.currentSession;
+        
+        return {
+          chatSessions: updatedSessions,
+          currentSession: updatedCurrentSession
+        };
       });
       
       return userMessage;
@@ -223,11 +240,19 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
       set({ error: errorMessage });
       throw err;
     } finally {
-      set({ isLoading: false });
+      // Retirer l'ID de la session des sessions en cours de chargement
+      set(state => ({ 
+        loadingSessions: state.loadingSessions.filter(id => id !== messageData.sessionId) 
+      }));
     }
   },
 
   setCurrentSession: (session: ChatSession | null) => {
     set({ currentSession: session });
-  }
+  },
+  
+  // Vérifier si une session spécifique est en cours de chargement
+  isSessionLoading: (sessionId: string) => {
+    return get().loadingSessions.includes(sessionId);
+  },
 }));

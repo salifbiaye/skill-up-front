@@ -11,6 +11,7 @@ import { ObjectiveItem } from "./objective-item"
 import { ObjectiveModalClient } from "@/components/modals/objective-modal-client"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { toast } from "sonner";
+import {ObjectivesHeader} from "@/features/objectives/objectives-header";
 
 export function ObjectivesGrid() {
   const objectives = useObjectivesStore(state => state.objectives);
@@ -132,13 +133,7 @@ export function ObjectivesGrid() {
   
   return (
     <>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">Objectifs</h2>
-        <Button onClick={handleOpenCreateModal}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nouvel objectif
-        </Button>
-      </div>
+      <ObjectivesHeader handleOpenCreateModal={handleOpenCreateModal}/>
       
       {objectives.length === 0 ? (
         <Card>

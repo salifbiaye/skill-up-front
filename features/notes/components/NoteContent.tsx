@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Check, X, Edit, FileCode, AlignLeft } from "lucide-react"
 import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 
 interface NoteContentProps {
@@ -116,7 +117,7 @@ export function NoteContent({
             ) : (
               /* Mode markdown: Utiliser ReactMarkdown pour le rendu */
               <div className="markdown-content">
-                <ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {note.content}
                 </ReactMarkdown>
               </div>

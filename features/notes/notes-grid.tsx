@@ -111,7 +111,6 @@ export function NotesGrid() {
       
       toast.success("Nouvelle session de chat créée")
     } catch (error) {
-      console.error("Erreur lors de la création de la session avec note:", error)
       toast.error("Erreur lors de la création de la session de chat")
     }
   }

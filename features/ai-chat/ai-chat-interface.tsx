@@ -19,6 +19,9 @@ import { SendMessageInput } from "@/types/ai-chat"
 import { toast } from "sonner"
 import { NoteMessage } from "@/components/ai-chat/note-message"
 import { NoteListMessage } from "@/components/ai-chat/note-list-message"
+import {AiChatHeader} from "@/features/ai-chat/ai-chat-header"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm";
 
 export function AiChatInterface() {
   // Utiliser le store Zustand pour AI Chat
@@ -31,6 +34,7 @@ export function AiChatInterface() {
   const deleteChatSession = useAiChatStore(state => state.deleteChatSession)
   const sendChatMessage = useAiChatStore(state => state.sendMessage)
   const setCurrentSession = useAiChatStore(state => state.setCurrentSession)
+  const isSessionLoading = useAiChatStore(state => state.isSessionLoading)
   
   // Utiliser le store Zustand pour les notes
   const notes = useNotesStore(state => state.notes)
@@ -83,7 +87,6 @@ export function AiChatInterface() {
       setIsCreateModalOpen(false)
       toast.success("Nouvelle session de chat créée avec succès")
     } catch (error) {
-      console.error("Erreur lors de la création d'une nouvelle session:", error)
       toast.error("Erreur lors de la création de la session de chat")
     }
   }
@@ -129,7 +132,6 @@ export function AiChatInterface() {
       setIsNoteModalOpen(false);
       toast.success(`Note "${note.title}" ajoutée à la conversation`);
     } catch (error) {
-      console.error("Erreur lors de l'ajout de la note à la conversation:", error);
       toast.error("Erreur lors de l'ajout de la note à la conversation");
     }
   };
@@ -196,7 +198,6 @@ export function AiChatInterface() {
       setIsNoteModalOpen(false);
       toast.success("Nouvelle session de chat créée avec la note");
     } catch (error) {
-      console.error("Erreur lors de la création de la session avec note:", error);
       toast.error("Erreur lors de la création de la session de chat");
     }
   };
@@ -209,14 +210,13 @@ export function AiChatInterface() {
       await deleteChatSession(sessionId)
       toast.success("Session de chat supprimée avec succès")
     } catch (error) {
-      console.error("Erreur lors de la suppression de la session:", error)
       toast.error("Erreur lors de la suppression de la session de chat")
     }
   }
 
   // Envoyer un message dans la session de chat 
   const handleSendMessage = () => {
-    if (!input.trim() || isLoading || !currentSession) return
+    if (!input.trim() || !currentSession || isSessionLoading(currentSession.id)) return
 
     // Préparer les données du message
     const messageData: SendMessageInput = {
@@ -246,6 +246,7 @@ export function AiChatInterface() {
   return (
     <div className="flex h-full w-full overflow-hidden">
       {/* Bouton pour afficher la sidebar sur mobile */}
+
       <button 
         className="fixed left-4 bottom-20 z-50 md:hidden bg-primary text-white rounded-full p-2 shadow-md"
         onClick={() => setShowMobileSidebar(true)}
@@ -399,23 +400,26 @@ export function AiChatInterface() {
 
       {/* Contenu principal avec marge pour le sidebar */}
       <div className="flex-1 flex flex-col ml-0 md:ml-72 h-[calc(100vh-4rem)]">
-        {/* En-tête de la conversation */}
         {currentSession ? (
-          <div className="border-b p-4 flex items-center justify-between bg-background">
-            <div className="flex items-center">
-              <h2 className="text-xl font-semibold truncate">{currentSession.title}</h2>
+            <div className="relative overflow-hidden  border-b  bg-blue-100 dark:bg-slate-900 p-6  text-blue-800 dark:text-white">
+              <div className="absolute inset-0 dark:bg-black/30"></div>
+              <div className="absolute top-0 left-0 h-20 w-20 rounded-full bg-blue-800/20 dark:bg-white/10 blur-xl"></div>
+              <div className="absolute bottom-0 right-0 h-16 w-16 rounded-full bg-blue-800/20 dark:bg-white/10 blur-lg"></div>
+
+              <div className="flex items-center">
+                <h2 className="text-2xl font-semibold truncate">{currentSession.title}</h2>
+              </div>
             </div>
-          </div>
         ) : null}
 
         {/* Zone de conversation */}
         <div
-          ref={chatContainerRef}
-          className="flex-1 overflow-y-auto bg-gradient-to-br from-background to-muted/20 p-4"
+            ref={chatContainerRef}
+            className="flex-1 overflow-y-auto bg-gradient-to-br from-background to-muted/20 p-4"
         >
           {!currentSession ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="max-w-2xl w-full px-4 md:px-0 py-4 text-center">
+              <div className="flex items-center justify-center h-full">
+                <div className="max-w-2xl w-full px-4 md:px-0 py-4 text-center">
                 <div className="mb-8">
                   <h1 className="text-3xl font-bold mb-2">Bienvenue sur SkillUp IA</h1>
                   <p className="text-muted-foreground">Votre assistant d'apprentissage personnel</p>
@@ -455,7 +459,7 @@ export function AiChatInterface() {
                     >
                       <div>
                         <p className="font-medium">Résumer mes notes</p>
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <p className="text-xs dark:text-muted-foreground mt-1">
                           Générer un résumé de mes notes sur l'algorithmique
                         </p>
                       </div>
@@ -468,7 +472,7 @@ export function AiChatInterface() {
                     >
                       <div>
                         <p className="font-medium">Questions de révision</p>
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <p className="text-xs dark:text-muted-foreground mt-1">
                           Créer des questions pour tester mes connaissances
                         </p>
                       </div>
@@ -559,14 +563,14 @@ export function AiChatInterface() {
                       );
                     }
                     
-                    // Afficher un message texte normal
+                    // Afficher un message texte normal avec support Markdown
                     return (
                       <div
                         key={message.id}
                         className={`flex ${message.role === "user" ? "justify-end" : "justify-start"} mb-4`}
                       >
                         <div
-                          className={`flex max-w-[80%] items-start rounded-lg px-4 py-2 ${message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}
+                          className={`flex max-w-[80%] items-start rounded-lg px-4 py-2 ${message.role === "user" ? "bg-primary text-primary-foreground" : ""}`}
                         >
                           <div className="mr-3 mt-0.5">
                             {message.role === "user" ? (
@@ -584,7 +588,11 @@ export function AiChatInterface() {
                             )}
                           </div>
                           <div className="relative w-full">
-                            <div className="text-sm whitespace-pre-wrap">{message.content}</div>
+                            <div className="text-sm prose prose-sm max-w-full dark:prose-invert overflow-hidden markdown-chat px-2 py-1">
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {message.content}
+                              </ReactMarkdown>
+                            </div>
                             <div className="mt-1 flex items-center justify-between">
                               <div className="text-xs opacity-70">
                                 {new Date(message.timestamp).toLocaleTimeString([], {
@@ -611,9 +619,9 @@ export function AiChatInterface() {
                       </div>
                     );
                   })}
-                  {isLoading && (
+                  {currentSession && isSessionLoading(currentSession.id) && (
                     <div className="flex justify-start">
-                      <div className="flex max-w-[80%] items-center rounded-lg bg-muted px-4 py-2">
+                      <div className="flex max-w-[80%] items-start rounded-lg border border-border/50 bg-background px-4 py-2">
                         <div className="mr-3">
                           <Avatar className="h-6 w-6">
                             <AvatarFallback className="bg-muted-foreground/10">
@@ -794,7 +802,7 @@ export function AiChatInterface() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                disabled={isLoading || !currentSession}
+                disabled={!currentSession || (currentSession && isSessionLoading(currentSession.id))}
                 className="flex-1"
               />
               <Button

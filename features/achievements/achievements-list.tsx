@@ -56,9 +56,9 @@ export function AchievementsList() {
 
 
   return (
-    <Card>
+    <Card className={"bg-background"}>
       <CardHeader>
-        <CardTitle>Achievements</CardTitle>
+        <CardTitle></CardTitle>
         <CardDescription>Suivez votre progression et débloquez des récompenses</CardDescription>
       </CardHeader>
       <CardContent>

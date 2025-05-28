@@ -55,7 +55,6 @@ export const ProfileService = {
         }
         return await response.json();
       } catch (error) {
-        console.error("Erreur API:", error);
         return mockUserProfile; // Fallback aux données fictives en cas d'erreur
       }
     }

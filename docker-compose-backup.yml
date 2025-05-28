@@ -1,0 +1,155 @@
+version: '3.8'
+
+services:
+  # Service backend Spring Boot
+  backend:
+    image: gdxebec/skillup-backend:latest
+    container_name: skillup-backend
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/skillup?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.MySQLDialect
+      - SPRING_PROFILES_ACTIVE=prod
+      - SERVER_SERVLET_CONTEXT_PATH=/api
+      - JWT_SECRET=404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+      - JWT_EXPIRATION=86400000
+      - JWT_REFRESH_TOKEN_EXPIRATION=604800000
+      - OPENROUTER_API_KEY=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
+      - OPENROUTER_API_URL=https://openrouter.ai/api/v1
+      - OPENROUTER_MODEL=qwen/qwen3-30b-a3b:free
+    depends_on:
+      - db
+    networks:
+      - skillup-network
+
+  # Service frontend Next.js
+  frontend:
+    image: gdxebec/skillup-frontend:latest
+    container_name: skillup-frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8080/api
+    depends_on:
+      - backend
+    networks:
+      - skillup-network
+
+  # Service base de données MySQL
+  db:
+    image: mysql:8.0
+    container_name: skillup-db
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_DATABASE=skillup
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_ALLOW_EMPTY_PASSWORD=no
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+    networks:
+      - skillup-network
+
+  # Service Adminer pour l'administration de la base de données
+  adminer:
+    image: adminer:latest
+    container_name: skillup-adminer
+    restart: always
+    ports:
+      - "8081:8080"
+    environment:
+      - ADMINER_DEFAULT_SERVER=db
+      - ADMINER_DESIGN=pepa-linha
+    depends_on:
+      - db
+    networks:
+      - skillup-network
+
+  # Service de backup automatique de la base de données
+  db-backup:
+    image: mysql:8.0
+    container_name: skillup-db-backup
+    restart: "no"
+    environment:
+      - MYSQL_HOST=db
+      - MYSQL_DATABASE=skillup
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+    volumes:
+      - backup_data:/backup
+      - ./backup-script.sh:/backup-script.sh:ro
+    command: >
+      bash -c "
+        echo '0 8 * * * /backup-script.sh' | crontab - &&
+        crond -f
+      "
+    depends_on:
+      - db
+    networks:
+      - skillup-network
+
+networks:
+  skillup-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  backup_data:
+
+
+#   #!/bin/bash
+
+# # Configuration
+# BACKUP_DIR="/backup"
+# DB_HOST="db"
+# DB_NAME="skillup"
+# DB_USER="root"
+# DB_PASSWORD="root"
+# DATE=$(date +%Y%m%d_%H%M%S)
+# BACKUP_FILE="skillup_backup_${DATE}.sql"
+
+# # Créer le répertoire de backup s'il n'existe pas
+# mkdir -p $BACKUP_DIR
+
+# # Supprimer les anciens backups (garde seulement le plus récent)
+# echo "Suppression des anciens backups..."
+# find $BACKUP_DIR -name "skillup_backup_*.sql" -type f -delete
+
+# # Attendre que la base de données soit prête
+# echo "Vérification de la disponibilité de la base de données..."
+# until mysqladmin ping -h"$DB_HOST" -u"$DB_USER" -p"$DB_PASSWORD" --silent; do
+#     echo "En attente de la base de données..."
+#     sleep 5
+# done
+
+# # Créer le backup
+# echo "Création du backup de la base de données: $BACKUP_FILE"
+# mysqldump -h"$DB_HOST" -u"$DB_USER" -p"$DB_PASSWORD" \
+#     --single-transaction \
+#     --routines \
+#     --triggers \
+#     --events \
+#     --hex-blob \
+#     --opt \
+#     "$DB_NAME" > "$BACKUP_DIR/$BACKUP_FILE"
+
+# # Vérifier si le backup a réussi
+# if [ $? -eq 0 ]; then
+#     echo "Backup créé avec succès: $BACKUP_FILE"
+#     echo "Taille du fichier: $(du -h $BACKUP_DIR/$BACKUP_FILE | cut -f1)"
+# else
+#     echo "Erreur lors de la création du backup!"
+#     exit 1
+# fi
+
+# # Afficher l'espace disque utilisé
+# echo "Espace disque utilisé pour les backups:"
+# du -sh $BACKUP_DIR

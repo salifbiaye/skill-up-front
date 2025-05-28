@@ -24,18 +24,21 @@ export function DashboardNav({ items }: DashboardNavProps) {
 
   return (
       <div className={"h-full fixed w-64 flex overflow-hidden"}>
-        <Sidebar className="bg-slate-100 dark:bg-slate-900">
-          <SidebarContent className="px-3 py-6">
+
+        <Sidebar className="bg-muted dark:bg-slate-900">
+          <div className="absolute inset-0 z-0  dark:bg-black/40"></div>
+
+          <SidebarContent className="px-3 z-20 py-6">
             <div className="space-y-1">
               {items.map((item) => (
                   <Link
                       key={item.href}
                       href={item.href}
                       className={cn(
-                          buttonVariants({ variant: "ghost" }),
+                          buttonVariants({variant: "ghost"}),
                           pathname.startsWith(item.href)
-                            ? "bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-muted dark:text-foreground dark:hover:bg-primary" 
-                            : "hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-primary dark:hover:text-foreground dark:hover:underline",
+                              ? "bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-muted dark:text-foreground dark:hover:bg-primary"
+                              : "hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-primary dark:hover:text-foreground dark:hover:underline",
                           "justify-start gap-2 w-full",
                       )}
                   >
@@ -46,7 +49,7 @@ export function DashboardNav({ items }: DashboardNavProps) {
             </div>
 
           </SidebarContent>
-          <SidebarFooter className="border-t p-4 pb-28">
+          <SidebarFooter className="border-t z-20 p-4 pb-28">
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-2">
                 <Avatar className="h-8 w-8">
@@ -62,7 +65,7 @@ export function DashboardNav({ items }: DashboardNavProps) {
                   <Link
                       href="/logout"
                       className={cn(
-                          buttonVariants({ variant: "outline" }),
+                          buttonVariants({variant: "outline"}),
                           "justify-center w-full text-destructive hover:text-destructive hover:bg-destructive/10"
                       )}
                   >

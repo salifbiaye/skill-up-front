@@ -7,6 +7,7 @@ import { PdfThemeService } from "./PdfThemeService"
 import { PdfMarkdownService } from "./PdfMarkdownService"
 import { PdfCodeBlockService } from "./PdfCodeBlockService"
 import { PdfUtilsService } from "./PdfUtilsService"
+import { PdfTableService } from "./PdfTableService"
 
 /**
  * Service principal pour l'export de notes en PDF
@@ -34,6 +35,15 @@ export class PdfExportService {
     })
 
     const themeStyles = PdfThemeService.getThemeStyles(theme)
+    
+    // Ajouter les couleurs pour les tableaux si elles n'existent pas
+    if (!themeStyles.tableBgColor) {
+      themeStyles.tableBgColor = [240, 240, 240] // Couleur de fond pour l'en-tête
+    }
+    if (!themeStyles.tableBorderColor) {
+      themeStyles.tableBorderColor = [200, 200, 200] // Couleur des bordures
+    }
+    
     let currentY = 25
 
     // Appliquer l'en-tête selon le thème
@@ -58,7 +68,10 @@ export class PdfExportService {
       startY: number
   ): Promise<void> {
     // Extraire les blocs de code
-    const { processedContent, codeBlocks } = PdfCodeBlockService.extractCodeBlocks(content)
+    const { processedContent: contentWithoutCode, codeBlocks } = PdfCodeBlockService.extractCodeBlocks(content)
+    
+    // Extraire les tableaux
+    const { processedContent, tables } = PdfTableService.extractTables(contentWithoutCode)
 
     const lines = processedContent.split('\n')
     let currentY = startY
@@ -80,6 +93,15 @@ export class PdfExportService {
         const codeBlock = codeBlocks.get(trimmedLine)
         if (codeBlock) {
           currentY = PdfCodeBlockService.renderCodeBlock(doc, codeBlock, styles, currentY)
+          continue
+        }
+      }
+      
+      // Gérer les tableaux
+      if (trimmedLine.startsWith('__TABLE_') && trimmedLine.endsWith('__')) {
+        const table = tables.get(trimmedLine)
+        if (table) {
+          currentY = PdfTableService.renderTable(doc, table, styles, currentY)
           continue
         }
       }

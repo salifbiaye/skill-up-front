@@ -73,7 +73,9 @@ export async function PUT(
         const id = param.id;
         // Construction de l'URL backend
         const backendUrl = `${API_BASE_URL}/tasks/${id}`;
-
+        const body = await request.text();
+        const parsedbody = JSON.parse(body);
+        delete parsedbody.id;
         // Appel au backend
         const response = await fetch(backendUrl, {
             method: 'PUT',
@@ -81,7 +83,7 @@ export async function PUT(
                 'Content-Type': 'application/json',
                 "Authorization": `Bearer ${token}`,
             },
-            body: await request.text(),
+            body: JSON.stringify({...parsedbody}),
         });
 
         if (!response.ok) {

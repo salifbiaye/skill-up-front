@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { AchievementsList } from "@/features/achievements/achievements-list"
 import { useAchievementsStore } from "@/stores/useAchievementsStore"
+import {AchievementsHeader} from "@/features/achievements/achievements-header";
 
 export default function AchievementsPage() {
   // Récupérer la fonction de chargement des achievements
@@ -15,6 +16,7 @@ export default function AchievementsPage() {
   
   return (
     <div className="flex flex-col gap-8 p-8">
+      <AchievementsHeader/>
       <AchievementsList />
     </div>
   )

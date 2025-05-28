@@ -33,11 +33,7 @@ export function ObjectiveModalClient({
   const [objectiveTitle, setObjectiveTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setdueDate] = useState<Date | undefined>(undefined);
-  const [dueTime, setDueTime] = useState<string>("12:00");
-  const [priority, setPriority] = useState<"low" | "medium" | "high">("medium");
-  const [progress, setProgress] = useState(0);
-  const [status, setStatus] = useState<"NOT_STARTED" | "IN_PROGRESS" | "COMPLETED">("NOT_STARTED");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dueTime, setDueTime] = useState<string>("12:00");const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isEditMode = !!objective;
@@ -64,19 +60,13 @@ export function ObjectiveModalClient({
           setdueDate(undefined);
           setDueTime("12:00");
         }
-        
-        setPriority(objective.priority);
-        setProgress(objective.progress);
-        setStatus(objective.status);
+
       } else {
         // Mode création: réinitialiser les champs
         setObjectiveTitle("");
         setDescription("");
         setdueDate(undefined);
         setDueTime("12:00");
-        setPriority("medium");
-        setProgress(0);
-        setStatus("NOT_STARTED");
       }
       setError(null);
     }
@@ -110,9 +100,6 @@ export function ObjectiveModalClient({
           title: objectiveTitle,
           description,
           dueDate: formattedDateTime,
-          priority,
-          status,
-          progress
         };
         
         await onSubmit(objectiveData);
@@ -122,7 +109,6 @@ export function ObjectiveModalClient({
           title: objectiveTitle,
           description,
           dueDate: formattedDateTime,
-          priority
         };
         
         await onSubmit(objectiveData);
@@ -137,18 +123,7 @@ export function ObjectiveModalClient({
     }
   };
 
-  // Mettre à jour automatiquement le statut en fonction du progrès
-  useEffect(() => {
-    if (!isEditMode) return;
-    
-    if (progress === 0) {
-      setStatus("NOT_STARTED");
-    } else if (progress === 100) {
-      setStatus("COMPLETED");
-    } else {
-      setStatus("IN_PROGRESS");
-    }
-  }, [progress, isEditMode]);
+
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -242,76 +217,10 @@ export function ObjectiveModalClient({
             </div>
           </div>
           
-          <div className="space-y-2">
-            <label htmlFor="priority" className="text-sm font-medium">
-              Priorité
-            </label>
-            <Select 
-              value={priority} 
-              onValueChange={value => setPriority(value as "low" | "medium" | "high")}
-              disabled={isCompleted}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner une priorité" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low">Basse</SelectItem>
-                <SelectItem value="medium">Moyenne</SelectItem>
-                <SelectItem value="high">Haute</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+
+
           
-          {isEditMode && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label htmlFor="progress" className="text-sm font-medium">
-                  Progression
-                </label>
-                <span className="text-sm text-muted-foreground">{progress}%</span>
-              </div>
-              <div className="flex items-center gap-4">
-                <BarChart className="h-4 w-4 text-muted-foreground" />
-                <Slider
-                  id="progress"
-                  value={[progress]}
-                  min={0}
-                  max={100}
-                  step={5}
-                  onValueChange={value => setProgress(value[0])}
-                  disabled={isCompleted}
-                  className="flex-1"
-                />
-              </div>
-              <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                <span>Non commencé</span>
-                <span>En cours</span>
-                <span>Terminé</span>
-              </div>
-            </div>
-          )}
-          
-          {isEditMode && (
-            <div className="space-y-2">
-              <label htmlFor="status" className="text-sm font-medium">
-                Statut
-              </label>
-              <Select 
-                value={status} 
-                onValueChange={value => setStatus(value as "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED")}
-                disabled={isCompleted}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un statut" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="NOT_STARTED">Non commencé</SelectItem>
-                  <SelectItem value="IN_PROGRESS">En cours</SelectItem>
-                  <SelectItem value="COMPLETED">Terminé</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+
         </div>
         
         <div className="flex justify-end space-x-2">

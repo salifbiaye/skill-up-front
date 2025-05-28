@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Target, CheckSquare, FileText, TrendingUp, Loader2 } from "lucide-react"
 import { useObjectivesStore, useTasksStore, useNotesStore } from "@/stores"
+import {toast} from "sonner";
 
 type StatsData = {
   activeObjectives: number
@@ -126,7 +127,7 @@ export function StatsCards() {
           progressChange
         })
       } catch (error) {
-        console.error("Erreur lors du calcul des statistiques:", error)
+        toast.error("Erreur lors du calcul des statistiques. Veuillez réessayer plus tard.")
       } finally {
         setIsLoading(false)
       }

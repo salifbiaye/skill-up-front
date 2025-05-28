@@ -43,7 +43,6 @@ export const TasksService = {
       try {
         const response = await fetch(`/api/tasks/${id}`);
         if (!response.ok) {
-          console.error("Erreur lors de la récupération de la tâche");
           // Fallback aux données fictives en cas d'erreur
           return tasksData.find(task => task.id === id);
         }
@@ -65,7 +64,7 @@ export const TasksService = {
   async getTasksByObjective(objectiveId: string): Promise<Task[]> {
     if (config.useApi) {
       try {
-        const response = await fetch(`/api/tasks?objectiveId=${objectiveId}`);
+        const response = await fetch(`/api/tasks/goal/${objectiveId}`);
         if (!response.ok) {
           console.error("Erreur lors de la récupération des tâches liées à l'objectif");
           // Fallback aux données fictives en cas d'erreur

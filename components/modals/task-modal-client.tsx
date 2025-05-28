@@ -43,6 +43,7 @@ export function TaskModalClient({
   const [error, setError] = useState<string | null>(null);
 
   const isEditMode = !!task;
+  const isCompleted = task?.status === "COMPLETED";
 
   // Réinitialiser le formulaire lorsque le modal s'ouvre ou que la tâche change
   useEffect(() => {
@@ -182,8 +183,11 @@ export function TaskModalClient({
           </div>
           
           <div className="space-y-2">
-            <label htmlFor="dueDate" className="text-sm font-medium">
+            <label htmlFor="dueDate" className="text-sm font-medium flex items-center">
               Date d'échéance
+              {isCompleted && (
+                <span className="ml-2 text-xs text-muted-foreground">(non modifiable pour les tâches terminées)</span>
+              )}
             </label>
             <div className="flex space-x-2">
               <div className="flex-1">
@@ -193,8 +197,10 @@ export function TaskModalClient({
                       variant="outline"
                       className={cn(
                         "w-full justify-start text-left font-normal",
-                        !dueDate && "text-muted-foreground"
+                        !dueDate && "text-muted-foreground",
+                        isCompleted && "opacity-70 cursor-not-allowed"
                       )}
+                      disabled={isCompleted}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {dueDate ? (
@@ -204,24 +210,27 @@ export function TaskModalClient({
                       )}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={dueDate}
-                      onSelect={setDueDate}
-                      initialFocus
-                    />
-                  </PopoverContent>
+                  {!isCompleted && (
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={dueDate}
+                        onSelect={setDueDate}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  )}
                 </Popover>
               </div>
               <div className="w-1/3">
-                <div className="flex items-center border rounded-md h-10 px-3">
+                <div className={cn("flex items-center border rounded-md h-10 px-3", isCompleted && "opacity-70 cursor-not-allowed")}>
                   <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
                   <input
                     type="time"
                     value={dueTime}
                     onChange={(e) => setDueTime(e.target.value)}
                     className="w-full focus:outline-none"
+                    disabled={isCompleted}
                   />
                 </div>
               </div>
@@ -229,11 +238,18 @@ export function TaskModalClient({
           </div>
           
           <div className="space-y-2">
-            <label htmlFor="priority" className="text-sm font-medium">
+            <label htmlFor="priority" className="text-sm font-medium flex items-center">
               Priorité
+              {isCompleted && (
+                <span className="ml-2 text-xs text-muted-foreground">(non modifiable pour les tâches terminées)</span>
+              )}
             </label>
-            <Select value={priority} onValueChange={value => setPriority(value as "LOW" | "MEDIUM" | "HIGH")}>
-              <SelectTrigger>
+            <Select 
+              value={priority} 
+              onValueChange={value => setPriority(value as "LOW" | "MEDIUM" | "HIGH")}
+              disabled={isCompleted}
+            >
+              <SelectTrigger className={isCompleted ? "opacity-70 cursor-not-allowed" : ""}>
                 <SelectValue placeholder="Sélectionner une priorité" />
               </SelectTrigger>
               <SelectContent>
@@ -245,14 +261,19 @@ export function TaskModalClient({
           </div>
           
           <div className="space-y-2">
-            <label htmlFor="goalId" className="text-sm font-medium">
+            <label htmlFor="goalId" className="text-sm font-medium flex items-center">
               ID de l'objectif lié
+              {isCompleted && (
+                <span className="ml-2 text-xs text-muted-foreground">(non modifiable pour les tâches terminées)</span>
+              )}
             </label>
             <Input
               id="goalId"
               value={goalId}
               onChange={e => setGoalId(e.target.value)}
               placeholder="Collez l'ID de l'objectif ici"
+              disabled={isCompleted}
+              className={isCompleted ? "opacity-70 cursor-not-allowed" : ""}
             />
           </div>
 
