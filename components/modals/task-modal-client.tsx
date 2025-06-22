@@ -217,6 +217,19 @@ export function TaskModalClient({
             </Select>
           </div>
 
+          <div className="space-y-2">
+            <label htmlFor="goalId" className="text-sm font-medium">
+              ID de l'objectif lié
+            </label>
+            <Input
+              id="goalId"
+              value={goalId}
+              onChange={e => setGoalId(e.target.value)}
+              placeholder="ID de l'objectif"
+              disabled={isCompleted || !!objectiveId}
+            />
+          </div>
+
           <div className="flex justify-end space-x-2 pt-4">
             <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
               Annuler
