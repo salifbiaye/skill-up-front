@@ -52,7 +52,6 @@ export const useAuthStore = create<AuthState>()(
           Cookies.set('auth-token', data.token, { 
             expires: 7, // expire dans 7 jours
             path: '/',
-            secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict'
           })
           

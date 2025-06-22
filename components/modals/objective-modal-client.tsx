@@ -5,12 +5,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format, set } from "date-fns";
 import { fr } from "date-fns/locale";
-import { CalendarIcon, BarChart, Clock } from "lucide-react";
+import { Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
 import { Objective, CreateObjectiveInput, UpdateObjectiveInput } from "@/types/objectives";
@@ -32,8 +29,9 @@ export function ObjectiveModalClient({
 }: ObjectiveModalClientProps) {
   const [objectiveTitle, setObjectiveTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [dueDate, setdueDate] = useState<Date | undefined>(undefined);
-  const [dueTime, setDueTime] = useState<string>("12:00");const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dueDate, setdueDate] = useState<string>("");
+  const [dueTime, setDueTime] = useState<string>("12:00");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isEditMode = !!objective;
@@ -50,14 +48,14 @@ export function ObjectiveModalClient({
         // Extraire la date et l'heure si disponible
         if (objective.dueDate) {
           const dateObj = new Date(objective.dueDate);
-          setdueDate(dateObj);
+          setdueDate(format(dateObj, "yyyy-MM-dd"));
           
           // Extraire l'heure au format HH:MM
           const hours = dateObj.getHours().toString().padStart(2, '0');
           const minutes = dateObj.getMinutes().toString().padStart(2, '0');
           setDueTime(`${hours}:${minutes}`);
         } else {
-          setdueDate(undefined);
+          setdueDate("");
           setDueTime("12:00");
         }
 
@@ -65,7 +63,7 @@ export function ObjectiveModalClient({
         // Mode création: réinitialiser les champs
         setObjectiveTitle("");
         setDescription("");
-        setdueDate(undefined);
+        setdueDate("");
         setDueTime("12:00");
       }
       setError(null);
@@ -90,7 +88,7 @@ export function ObjectiveModalClient({
     try {
       // Combiner la date et l'heure
       const [hours, minutes] = dueTime.split(':').map(Number);
-      const dateTimeObj = dueDate ? set(new Date(dueDate), { hours, minutes, seconds: 0 }) : new Date();
+      const dateTimeObj = new Date(`${dueDate}T${dueTime}`);
       const formattedDateTime = format(dateTimeObj, "yyyy-MM-dd'T'HH:mm:ss");
       
       if (isEditMode && objective) {
@@ -122,8 +120,6 @@ export function ObjectiveModalClient({
       setIsSubmitting(false);
     }
   };
-
-
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -171,65 +167,33 @@ export function ObjectiveModalClient({
               Date d'échéance
             </label>
             <div className="flex space-x-2">
-              <div className="flex-1">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !dueDate && "text-muted-foreground"
-                      )}
-                      disabled={isCompleted}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {dueDate ? (
-                        format(dueDate, "PPP", { locale: fr })
-                      ) : (
-                        <span>Sélectionner une date</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="center">
-                    <Calendar
-                      mode="single"
-                      selected={dueDate}
-                      onSelect={setdueDate}
-                      initialFocus
-                      disabled={(date) => isCompleted || date < new Date(new Date().setHours(0, 0, 0, 0))}
-                      locale={fr}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="w-1/3">
-                <div className="flex items-center border rounded-md h-10 px-3">
-                  <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
-                  <input
-                    type="time"
-                    value={dueTime}
-                    onChange={(e) => setDueTime(e.target.value)}
-                    className="w-full focus:outline-none"
-                    disabled={isCompleted}
-                  />
-                </div>
-              </div>
+              <input
+                type="date"
+                id="dueDate"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                value={dueDate}
+                onChange={(e) => setdueDate(e.target.value)}
+                min={format(new Date(), "yyyy-MM-dd")}
+                disabled={isCompleted}
+              />
+              <input
+                type="time"
+                className="flex h-10 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                value={dueTime}
+                onChange={(e) => setDueTime(e.target.value)}
+                disabled={isCompleted}
+              />
             </div>
           </div>
-          
 
-
-          
-
-        </div>
-        
-        <div className="flex justify-end space-x-2">
-          <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
-            Annuler
-          </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting || isCompleted}>
-            {isSubmitting ? "Enregistrement..." : isEditMode ? "Mettre à jour" : "Créer"}
-          </Button>
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
+              Annuler
+            </Button>
+            <Button onClick={handleSubmit} disabled={isSubmitting || isCompleted}>
+              {isSubmitting ? "En cours..." : isEditMode ? "Mettre à jour" : "Créer"}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

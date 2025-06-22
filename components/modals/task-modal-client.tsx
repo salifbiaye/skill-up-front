@@ -6,11 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format, set } from "date-fns";
 import { fr } from "date-fns/locale";
-import { CalendarIcon, Clock } from "lucide-react";
+import { Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
@@ -35,7 +33,7 @@ export function TaskModalClient({
 }: TaskModalClientProps) {
   const [taskTitle, setTaskTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
+  const [dueDate, setDueDate] = useState<string>("");
   const [dueTime, setDueTime] = useState<string>("12:00");
   const [priority, setPriority] = useState<"LOW" | "MEDIUM" | "HIGH">("MEDIUM");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,19 +50,18 @@ export function TaskModalClient({
         // Mode édition: remplir avec les données de la tâche
         setTaskTitle(task.title);
         setDescription(task.description);
-
         
         // Extraire la date et l'heure si disponible
         if (task.dueDate) {
           const dateObj = new Date(task.dueDate);
-          setDueDate(dateObj);
+          setDueDate(format(dateObj, "yyyy-MM-dd"));
           
           // Extraire l'heure au format HH:MM
           const hours = dateObj.getHours().toString().padStart(2, '0');
           const minutes = dateObj.getMinutes().toString().padStart(2, '0');
           setDueTime(`${hours}:${minutes}`);
         } else {
-          setDueDate(undefined);
+          setDueDate("");
           setDueTime("12:00");
         }
         
@@ -75,18 +72,15 @@ export function TaskModalClient({
         // Mode création: réinitialiser les champs
         setTaskTitle("");
         setDescription("");
-        setDueDate(undefined);
+        setDueDate("");
         setDueTime("12:00");
         setPriority("MEDIUM");
-
-
+        setGoalId(objectiveId || "");
       }
 
       setError(null);
     }
   }, [isOpen, task, objectiveId]);
-
-
 
   const handleSubmit = async () => {
     // Validation
@@ -105,8 +99,7 @@ export function TaskModalClient({
 
     try {
       // Combiner la date et l'heure
-      const [hours, minutes] = dueTime.split(':').map(Number);
-      const dateTimeObj = dueDate ? set(new Date(dueDate), { hours, minutes, seconds: 0 }) : new Date();
+      const dateTimeObj = new Date(`${dueDate}T${dueTime}`);
       const formattedDateTime = format(dateTimeObj, "yyyy-MM-dd'T'HH:mm:ss");
       
       if (isEditMode && task) {
@@ -166,6 +159,7 @@ export function TaskModalClient({
               value={taskTitle}
               onChange={e => setTaskTitle(e.target.value)}
               placeholder="Titre de la tâche"
+              disabled={isCompleted}
             />
           </div>
           
@@ -179,78 +173,41 @@ export function TaskModalClient({
               onChange={e => setDescription(e.target.value)}
               placeholder="Description de la tâche"
               rows={3}
+              disabled={isCompleted}
             />
           </div>
           
           <div className="space-y-2">
-            <label htmlFor="dueDate" className="text-sm font-medium flex items-center">
+            <label htmlFor="dueDate" className="text-sm font-medium">
               Date d'échéance
-              {isCompleted && (
-                <span className="ml-2 text-xs text-muted-foreground">(non modifiable pour les tâches terminées)</span>
-              )}
             </label>
             <div className="flex space-x-2">
-              <div className="flex-1">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !dueDate && "text-muted-foreground",
-                        isCompleted && "opacity-70 cursor-not-allowed"
-                      )}
-                      disabled={isCompleted}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {dueDate ? (
-                        format(dueDate, "PPP", { locale: fr })
-                      ) : (
-                        <span>Sélectionner une date</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  {!isCompleted && (
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={dueDate}
-                        onSelect={setDueDate}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  )}
-                </Popover>
-              </div>
-              <div className="w-1/3">
-                <div className={cn("flex items-center border rounded-md h-10 px-3", isCompleted && "opacity-70 cursor-not-allowed")}>
-                  <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
-                  <input
-                    type="time"
-                    value={dueTime}
-                    onChange={(e) => setDueTime(e.target.value)}
-                    className="w-full focus:outline-none"
-                    disabled={isCompleted}
-                  />
-                </div>
-              </div>
+              <input
+                type="date"
+                id="dueDate"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                min={format(new Date(), "yyyy-MM-dd")}
+                disabled={isCompleted}
+              />
+              <input
+                type="time"
+                className="flex h-10 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                value={dueTime}
+                onChange={(e) => setDueTime(e.target.value)}
+                disabled={isCompleted}
+              />
             </div>
           </div>
-          
+
           <div className="space-y-2">
-            <label htmlFor="priority" className="text-sm font-medium flex items-center">
+            <label htmlFor="priority" className="text-sm font-medium">
               Priorité
-              {isCompleted && (
-                <span className="ml-2 text-xs text-muted-foreground">(non modifiable pour les tâches terminées)</span>
-              )}
             </label>
-            <Select 
-              value={priority} 
-              onValueChange={value => setPriority(value as "LOW" | "MEDIUM" | "HIGH")}
-              disabled={isCompleted}
-            >
-              <SelectTrigger className={isCompleted ? "opacity-70 cursor-not-allowed" : ""}>
-                <SelectValue placeholder="Sélectionner une priorité" />
+            <Select value={priority} onValueChange={(value: "LOW" | "MEDIUM" | "HIGH") => setPriority(value)} disabled={isCompleted}>
+              <SelectTrigger>
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="LOW">Basse</SelectItem>
@@ -259,33 +216,15 @@ export function TaskModalClient({
               </SelectContent>
             </Select>
           </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="goalId" className="text-sm font-medium flex items-center">
-              ID de l'objectif lié
-              {isCompleted && (
-                <span className="ml-2 text-xs text-muted-foreground">(non modifiable pour les tâches terminées)</span>
-              )}
-            </label>
-            <Input
-              id="goalId"
-              value={goalId}
-              onChange={e => setGoalId(e.target.value)}
-              placeholder="Collez l'ID de l'objectif ici"
-              disabled={isCompleted}
-              className={isCompleted ? "opacity-70 cursor-not-allowed" : ""}
-            />
+
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
+              Annuler
+            </Button>
+            <Button onClick={handleSubmit} disabled={isSubmitting || isCompleted}>
+              {isSubmitting ? "En cours..." : isEditMode ? "Mettre à jour" : "Créer"}
+            </Button>
           </div>
-
-        </div>
-
-        <div className="flex justify-end space-x-2">
-          <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
-            Annuler
-          </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? "Enregistrement..." : isEditMode ? "Mettre à jour" : "Créer"}
-          </Button>
         </div>
       </DialogContent>
     </Dialog>

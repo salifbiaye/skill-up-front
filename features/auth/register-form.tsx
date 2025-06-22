@@ -54,7 +54,9 @@ export function RegisterForm() {
       
       // Redirection vers le tableau de bord après inscription réussie
       toast.success("Compte créé avec succès !")
-      router.push("/dashboard")
+      
+      // Forcer une redirection complète en utilisant window.location plutôt que le router Next.js
+      window.location.href = `${window.location.origin}/dashboard`
     } catch (error) {
       // L'erreur est déjà gérée dans le store, mais on peut afficher un toast
       toast.error(storeError || "Échec de l'inscription")

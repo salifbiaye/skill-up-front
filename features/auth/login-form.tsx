@@ -44,7 +44,8 @@ export function LoginForm() {
       
       // Redirection vers le tableau de bord après connexion réussie
       toast.success("Connexion réussie !")
-      router.push("/dashboard")
+      // Forcer une redirection complète en utilisant window.location plutôt que le router Next.js
+      window.location.href = `${window.location.origin}/dashboard`
     } catch (error) {
       // L'erreur est déjà gérée dans le store, mais on peut afficher un toast
       toast.error(storeError || "Échec de la connexion")
