@@ -64,6 +64,93 @@ Caractéristiques principales :
 - Mise en place d'un réseau dédié pour la communication
 - Configuration d'un volume pour la persistance des données MySQL
 
+Voici le contenu complet du fichier `docker-compose.yml` :
+
+```yaml
+version: '3.8'
+
+services:
+  # Service backend Spring Boot
+  backend:
+    image: gdxebec/skillup-backend:latest
+    container_name: skillup-backend
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/skillup?useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=skillup_user
+      - SPRING_DATASOURCE_PASSWORD=passer
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.MySQLDialect
+      - SPRING_PROFILES_ACTIVE=prod
+      - SERVER_SERVLET_CONTEXT_PATH=/api
+      - JWT_SECRET=404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+      - JWT_EXPIRATION=86400000
+      - JWT_REFRESH_TOKEN_EXPIRATION=604800000
+      - OPENROUTER_API_KEY=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
+      - OPENROUTER_API_URL=https://openrouter.ai/api/v1
+      - OPENROUTER_MODEL=qwen/qwen3-30b-a3b:free
+    depends_on:
+      - db
+    networks:
+      - skillup-network
+
+  # Service frontend Next.js
+  frontend:
+    image: gdxebec/skillup-frontend:latest
+    container_name: skillup-frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8080/api
+    depends_on:
+      - backend
+    networks:
+      - skillup-network
+
+  # Service base de données MySQL
+  db:
+    image: mysql:8.0
+    container_name: skillup-db
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+        - MYSQL_DATABASE=skillup
+        - MYSQL_ROOT_PASSWORD=skillup_root_password
+        - MYSQL_USER=skillup_user
+        - MYSQL_PASSWORD=passer
+        - MYSQL_ALLOW_EMPTY_PASSWORD=no
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+    networks:
+      - skillup-network
+
+  # Service Adminer pour la gestion de base de données
+  adminer:
+    image: adminer:latest
+    container_name: skillup-adminer
+    restart: always
+    ports:
+      - "8081:8080"
+    environment:
+      - ADMINER_DEFAULT_SERVER=db
+    depends_on:
+      - db
+    networks:
+      - skillup-network
+
+networks:
+  skillup-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+```
+
 ## Configuration et Variables d'Environnement
 
 J'ai configuré les services avec les variables d'environnement nécessaires :
