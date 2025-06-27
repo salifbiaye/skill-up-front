@@ -1,221 +1,221 @@
 import { ChatSession, ChatMessage, CreateChatSessionInput, UpdateChatSessionInput, SendMessageInput } from "@/types/ai-chat";
-import { chatHistoryData } from "@/data/chat-history-data";
 import { API_CONFIG } from "@/config/api";
+import { CHAT_STATUS } from "@/data/chat-history";
 
 // Utiliser la configuration centralisée
 const config = {
-  useApi: API_CONFIG.useApi,
   baseUrl: API_CONFIG.baseUrl,
-  endpoints: API_CONFIG.endpoints.chatSessions
+  endpoints: API_CONFIG.endpoints.chat
 };
 
 /**
- * Service pour gérer les sessions de chat IA
- * Permet de basculer facilement entre les données fictives et l'API
+ * Service pour gérer le chat IA
  */
 export const AiChatService = {
   /**
    * Récupère toutes les sessions de chat
    */
-  async getAllChatSessions(): Promise<ChatSession[]> {
-    if (config.useApi) {
-      try {
-        const response = await fetch(`/api/chat-sessions`);
-        if (!response.ok) {
-          throw new Error("Erreur lors de la récupération des sessions de chat");
-        }
-        return await response.json();
-      } catch (error) {
-        console.error("Erreur API:", error);
-        return chatHistoryData; // Fallback aux données fictives en cas d'erreur
+  async getAllSessions(): Promise<ChatSession[]> {
+    try {
+      const response = await fetch(`/api/chat-sessions`);
+      if (!response.ok) {
+        throw new Error("Erreur lors de la récupération des sessions de chat");
       }
+      return await response.json();
+    } catch (error) {
+      console.error("Erreur API:", error);
+      return [];
     }
-    
-    // Utiliser les données fictives si l'API n'est pas activée
-    return Promise.resolve(chatHistoryData);
   },
 
   /**
    * Récupère une session de chat par son ID
    */
-  async getChatSessionById(id: string): Promise<ChatSession | undefined> {
-    if (config.useApi) {
-      try {
-        const response = await fetch(`/api/chat-sessions/${id}`);
-        if (!response.ok) {
-          throw new Error("Erreur lors de la récupération de la session de chat");
-        }
-        return await response.json();
-      } catch (error) {
-        console.error("Erreur API:", error);
-        // Fallback aux données fictives en cas d'erreur
-        return chatHistoryData.find(session => session.id === id);
+  async getSessionById(id: string): Promise<ChatSession | undefined> {
+    try {
+      const response = await fetch(`/api/chat-sessions/${id}`);
+      if (!response.ok) {
+        throw new Error("Session de chat non trouvée");
       }
+      return await response.json();
+    } catch (error) {
+      console.error("Erreur API:", error);
+      return undefined;
     }
-    
-    // Utiliser les données fictives si l'API n'est pas activée
-    return Promise.resolve(chatHistoryData.find(session => session.id === id));
   },
 
   /**
    * Crée une nouvelle session de chat
    */
-  async createChatSession(sessionData: CreateChatSessionInput): Promise<ChatSession> {
-    const now = new Date().toISOString();
-
-    if (config.useApi) {
-      try {
-        const response = await fetch(`/api/chat-sessions`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(sessionData),
-        });
-        
-        if (!response.ok) {
-          throw new Error("Erreur lors de la création de la session de chat");
-        }
-        const res = await response.json()
-
-        
-        return res;
-      } catch (error) {
-        console.error("Erreur API:", error);
-        // Créer une session fictive avec un ID généré
-        const messages: ChatMessage[] = [];
-        
-        if (sessionData.initialMessage) {
-          messages.push({
-            id: "1",
-            role: "user",
-            content: sessionData.initialMessage,
-            timestamp: now,
-          });
-          
-          // Ajouter une réponse fictive de l'assistant
-          messages.push({
-            id: "2",
-            role: "assistant",
-            content: "Bonjour ! Comment puis-je vous aider aujourd'hui ?",
-            timestamp: now,
-          });
-        }
-        
-        const newSession: ChatSession = {
-          id: Date.now().toString(),
-          title: sessionData.title,
-          messages,
-          createdAt: now,
-          updatedAt: now,
-        };
-        
-        return newSession;
-      }
-    }
-    
-    // Créer une session fictive avec un ID généré
-    const messages: ChatMessage[] = [];
-    
-    if (sessionData.initialMessage) {
-      messages.push({
-        id: "1",
-        role: "user",
-        content: sessionData.initialMessage,
-        timestamp: now,
+  async createSession(title: string): Promise<{ success: boolean; data?: ChatSession; error?: string }> {
+    try {
+      const response = await fetch(`/api/chat-sessions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ title }),
       });
       
-      // Ajouter une réponse fictive de l'assistant
-      messages.push({
-        id: "2",
-        role: "assistant",
-        content: "Bonjour ! Comment puis-je vous aider aujourd'hui ?",
-        timestamp: now,
-      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.message || "Erreur lors de la création de la session";
+        return {
+          success: false,
+          error: errorMessage
+        };
+      }
+      
+      const data = await response.json();
+      return {
+        success: true,
+        data
+      };
+    } catch (error) {
+      console.error("Erreur API:", error);
+      return {
+        success: false,
+        error: "Erreur lors de la communication avec le serveur"
+      };
     }
-    
-    const newSession: ChatSession = {
-      id: Date.now().toString(),
-      title: sessionData.title,
-      messages,
-      createdAt: now,
-      updatedAt: now,
-    };
-    
-    return Promise.resolve(newSession);
   },
 
   /**
-   * Met à jour une session de chat existante
+   * Ajoute un message à une session de chat
    */
-  async updateChatSession(sessionData: UpdateChatSessionInput): Promise<ChatSession> {
-    if (config.useApi) {
-      try {
-        const response = await fetch(`${config.baseUrl}${config.endpoints.detail(sessionData.id)}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(sessionData),
-        });
-        
-        if (!response.ok) {
-          throw new Error("Erreur lors de la mise à jour de la session de chat");
-        }
-        
-        return await response.json();
-      } catch (error) {
-        console.error("Erreur API:", error);
-        // Simuler une mise à jour avec les données fictives
-        const existingSession = chatHistoryData.find(session => session.id === sessionData.id);
-        if (!existingSession) {
-          throw new Error("Session de chat non trouvée");
-        }
-        
+  async addMessage(sessionId: string, message: Omit<ChatMessage, "id">): Promise<{ success: boolean; data?: ChatMessage; error?: string }> {
+    try {
+      const response = await fetch(`/api/chat-sessions/${sessionId}/messages`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(message),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.message || "Erreur lors de l'ajout du message";
         return {
-          ...existingSession,
-          ...sessionData,
-          updatedAt: new Date().toISOString(),
+          success: false,
+          error: errorMessage
         };
       }
+      
+      const data = await response.json();
+      return {
+        success: true,
+        data
+      };
+    } catch (error) {
+      console.error("Erreur API:", error);
+      return {
+        success: false,
+        error: "Erreur lors de la communication avec le serveur"
+      };
     }
-    
-    // Simuler une mise à jour avec les données fictives
-    const existingSession = chatHistoryData.find(session => session.id === sessionData.id);
-    if (!existingSession) {
-      throw new Error("Session de chat non trouvée");
+  },
+
+  /**
+   * Obtient une réponse de l'IA
+   */
+  async getAiResponse(sessionId: string, message: string): Promise<{ success: boolean; data?: ChatMessage; error?: string }> {
+    try {
+      const response = await fetch(`/api/chat-sessions/${sessionId}/ai-response`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.message || "Erreur lors de la génération de la réponse IA";
+        return {
+          success: false,
+          error: errorMessage
+        };
+      }
+      
+      const data = await response.json();
+      return {
+        success: true,
+        data
+      };
+    } catch (error) {
+      console.error("Erreur API:", error);
+      return {
+        success: false,
+        error: "Erreur lors de la communication avec le serveur"
+      };
     }
-    
-    return Promise.resolve({
-      ...existingSession,
-      ...sessionData,
-      updatedAt: new Date().toISOString(),
-    });
+  },
+
+  /**
+   * Met à jour le statut d'une session de chat
+   */
+  async updateStatus(id: string, status: keyof typeof CHAT_STATUS): Promise<{ success: boolean; data?: ChatSession; error?: string }> {
+    try {
+      const response = await fetch(`/api/chat-sessions/${id}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.message || "Erreur lors de la mise à jour du statut";
+        return {
+          success: false,
+          error: errorMessage
+        };
+      }
+      
+      const data = await response.json();
+      return {
+        success: true,
+        data
+      };
+    } catch (error) {
+      console.error("Erreur API:", error);
+      return {
+        success: false,
+        error: "Erreur lors de la communication avec le serveur"
+      };
+    }
   },
 
   /**
    * Supprime une session de chat
    */
-  async deleteChatSession(id: string): Promise<boolean> {
-    if (config.useApi) {
-      try {
-        const response = await fetch(`/api/chat-sessions/${id}`, {
-          method: "DELETE",
-        });
-        
-        if (!response.ok) {
-          throw new Error("Erreur lors de la suppression de la session de chat");
-        }
-        
-        return true;
-      } catch (error) {
-        console.error("Erreur API:", error);
-        return true; // Simuler une suppression réussie
+  async deleteSession(id: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const response = await fetch(`/api/chat-sessions/${id}`, {
+        method: "DELETE",
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.message || "Erreur lors de la suppression de la session";
+        return {
+          success: false,
+          error: errorMessage
+        };
       }
+      
+      return {
+        success: true
+      };
+    } catch (error) {
+      console.error("Erreur API:", error);
+      return {
+        success: false,
+        error: "Erreur lors de la communication avec le serveur"
+      };
     }
-    
-    // Simuler une suppression réussie
-    return Promise.resolve(true);
   },
 
   /**
@@ -229,48 +229,34 @@ export const AiChatService = {
       ...messageDataWithoutSessionId,
     };
 
-    if (config.useApi) {
-      try {
-        const response = await fetch(`/api/chat-sessions/${messageData.sessionId}/messages`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(parsedMessage),
-        });
-        
-        if (!response.ok) {
-          throw new Error("Erreur lors de l'envoi du message");
-        }
-        
-        return await response.json();
-      } catch (error) {
-        console.error("Erreur API:", error);
-        // Créer un message fictif
-        const userMessage: ChatMessage = {
-          id: Date.now().toString(),
-          role: "user",
-          content: messageData.content,
-          timestamp: now,
-          type: messageData.type,
-          metadata: messageData.metadata
-        };
-        
-        return userMessage;
+    try {
+      const response = await fetch(`/api/chat-sessions/${sessionId}/messages`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(parsedMessage),
+      });
+      
+      if (!response.ok) {
+        throw new Error("Erreur lors de l'envoi du message");
       }
+      
+      return await response.json();
+    } catch (error) {
+      console.error("Erreur API:", error);
+      // Créer un message fictif
+      const userMessage: ChatMessage = {
+        id: Date.now().toString(),
+        role: "user",
+        content: messageData.content,
+        timestamp: now,
+        type: messageData.type,
+        metadata: messageData.metadata
+      };
+      
+      return userMessage;
     }
-    
-    // Créer un message fictif
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      role: "user",
-      content: messageData.content,
-      timestamp: now,
-      type: messageData.type,
-      metadata: messageData.metadata
-    };
-    
-    return Promise.resolve(userMessage);
   },
 
   /**
@@ -282,7 +268,7 @@ export const AiChatService = {
    */
   async getAssistantResponse(sessionId: string, messageId: string, messageType?: string, metadata?: any): Promise<ChatMessage> {
     const now = new Date().toISOString();
-  const session = await this.getChatSessionById(sessionId);
+    const session = await this.getSessionById(sessionId);
     
     // Trouver le message spécifique par son ID
     const userMessageById = session?.messages.find(m => m.id === messageId);
@@ -296,38 +282,6 @@ export const AiChatService = {
     // Vérifier si le message de l'utilisateur est une note ou une liste de notes
     const isNoteMessage = currentUserMessage?.type === "note";
     const isNoteListMessage = currentUserMessage?.type === "note-list";
-    
-    if (config.useApi) {
-      try {
-        // Dans un environnement réel, cette requête serait gérée par le backend
-        const response = await fetch(`/api/chat-sessions/${sessionId}/ai-response`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ 
-            messageId: messageId,
-          }),
-        });
-        
-        if (!response.ok) {
-          throw new Error("Erreur lors de la génération de la réponse de l'assistant");
-        }
-        
-        return await response.json();
-      } catch (error) {
-        console.error("Erreur API:", error);
-        // Générer une réponse fictive
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: "Je suis désolé, je ne peux pas traiter votre demande pour le moment. Veuillez réessayer plus tard.",
-          timestamp: now,
-        };
-        
-        return assistantMessage;
-      }
-    }
     
     // Générer une réponse fictive basée sur le message de l'utilisateur
     let responseContent = "Je suis désolé, je ne comprends pas votre demande. Pouvez-vous préciser ?";

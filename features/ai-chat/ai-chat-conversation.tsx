@@ -9,53 +9,44 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Sparkles, Send, User, Bot, Search, PlusCircle, FileText } from "lucide-react"
 import { Sidebar, SidebarHeader, SidebarContent, SidebarFooter } from "@/components/sidebar"
-import { chatHistoryData } from "@/data/chat-history-data"
+import { ChatSession } from "@/types/ai-chat"
+import { AiChatService } from "@/services/ai-chat-service"
 
-export function AiChatConversation() {
-  const [messages, setMessages] = useState(chatHistoryData)
-  const [input, setInput] = useState("")
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+interface AiChatConversationProps {
+  sessionId: string
+}
+
+export default function AiChatConversation({ sessionId }: AiChatConversationProps) {
+  const [session, setSession] = useState<ChatSession | undefined>(undefined)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages])
-
-  const handleSend = () => {
-    if (input.trim()) {
-      // Ajouter le message de l'utilisateur
-      setMessages([
-        ...messages,
-        {
-          id: String(messages.length + 1),
-          role: "user",
-          content: input,
-          timestamp: "À l'instant",
-        },
-      ])
-
-      // Simuler une réponse de l'IA après un court délai
-      setTimeout(() => {
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          {
-            id: String(prevMessages.length + 1),
-            role: "assistant",
-            content:
-              "Je suis en train de traiter votre demande. Comment puis-je vous aider avec vos études aujourd'hui ?",
-            timestamp: "À l'instant",
-          },
-        ])
-      }, 1000)
-
-      setInput("")
+    const loadSession = async () => {
+      try {
+        const session = await AiChatService.getSessionById(sessionId)
+        setSession(session)
+      } catch (error) {
+        setError("Erreur lors du chargement de la conversation")
+        console.error(error)
+      } finally {
+        setLoading(false)
+      }
     }
+
+    loadSession()
+  }, [sessionId])
+
+  if (loading) {
+    return <div>Chargement de la conversation...</div>
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault()
-      handleSend()
-    }
+  if (error) {
+    return <div>Erreur : {error}</div>
+  }
+
+  if (!session) {
+    return <div>Session non trouvée</div>
   }
 
   return (
@@ -120,27 +111,24 @@ export function AiChatConversation() {
 
         <ScrollArea className="flex-1 p-4">
           <div className="space-y-4 max-w-3xl mx-auto">
-            {messages.map((message) => (
-              <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                <div className={`flex gap-3 max-w-[80%] ${message.role === "user" ? "flex-row-reverse" : ""}`}>
-                  <Avatar className={message.role === "assistant" ? "bg-primary/10 text-primary" : ""}>
-                    {message.role === "assistant" ? <Bot className="h-5 w-5" /> : <User className="h-5 w-5" />}
-                    <AvatarFallback>{message.role === "assistant" ? "IA" : "U"}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div
-                      className={`rounded-lg p-4 ${
-                        message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
-                      }`}
-                    >
-                      <p className="text-sm">{message.content}</p>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">{message.timestamp}</p>
-                  </div>
+            {session.messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${
+                  message.role === "assistant" ? "justify-start" : "justify-end"
+                }`}
+              >
+                <div
+                  className={`p-4 rounded-lg max-w-[70%] ${
+                    message.role === "assistant"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted"
+                  }`}
+                >
+                  {message.content}
                 </div>
               </div>
             ))}
-            <div ref={messagesEndRef} />
           </div>
         </ScrollArea>
 
@@ -149,12 +137,9 @@ export function AiChatConversation() {
             <div className="flex gap-2">
               <Input
                 placeholder="Posez une question ou demandez de l'aide..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
                 className="flex-1"
               />
-              <Button onClick={handleSend} disabled={!input.trim()}>
+              <Button>
                 <Send className="h-4 w-4" />
               </Button>
             </div>
