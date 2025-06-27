@@ -123,12 +123,12 @@ export const ObjectivesService = {
    */
   async updateStatus(id: string, status: keyof typeof OBJECTIVE_STATUS): Promise<{ success: boolean; data?: Objective; error?: string }> {
     try {
-      const response = await fetch(`/api/goals/${id}/status`, {
-        method: "PUT",
+      const response = await fetch(`/api/goals/${id}`, {
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status: status }),
       });
       
       if (!response.ok) {
@@ -160,7 +160,7 @@ export const ObjectivesService = {
   async updateProgress(id: string, progress: number): Promise<{ success: boolean; data?: Objective; error?: string }> {
     try {
       const response = await fetch(`/api/goals/${id}/progress`, {
-        method: "PUT",
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
