@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { ChatSession, ChatMessage, CreateChatSessionInput, UpdateChatSessionInput, SendMessageInput } from '@/types/ai-chat';
-import { CHAT_STATUS } from '@/data/chat-history';
 import { AiChatService } from '@/services/ai-chat-service';
 
 interface AiChatState {
@@ -14,7 +13,7 @@ interface AiChatState {
   fetchChatSessions: () => Promise<void>;
   getChatSessionById: (id: string) => Promise<ChatSession | undefined>;
   createChatSession: (sessionData: CreateChatSessionInput) => Promise<ChatSession>;
-  updateChatSession: (id: string, status: keyof typeof CHAT_STATUS) => Promise<ChatSession>;
+  updateChatSession: (sessionData: UpdateChatSessionInput) => Promise<ChatSession>;
   deleteChatSession: (id: string) => Promise<boolean>;
   sendMessage: (messageData: SendMessageInput) => Promise<ChatMessage>;
   setCurrentSession: (session: ChatSession | null) => void;
@@ -49,7 +48,7 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      const session = await AiChatService.getSessionById(id);
+      const session = await AiChatService.getChatSessionById(id);
       return session;
     } catch (err) {
       const errorMessage = "Erreur lors du chargement de la session de chat";
@@ -65,16 +64,13 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      const response = await AiChatService.createSession(sessionData.title);
+      const newSession = await AiChatService.createChatSession(sessionData);
 
-      if (!response.success || !response.data) {
-        throw new Error(response.error || "Erreur lors de la création de la session de chat");
-      }
-      const newSession = response.data;
       set(state => ({ 
         chatSessions: [...state.chatSessions, newSession],
         currentSession: newSession
       }));
+
       return newSession;
     } catch (err) {
       const errorMessage = "Erreur lors de la création de la session de chat";
@@ -86,29 +82,28 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
     }
   },
 
-  updateChatSession: async (id: string, status: keyof typeof CHAT_STATUS) => {
+  updateChatSession: async (sessionData: UpdateChatSessionInput) => {
     set({ isLoading: true, error: null });
     
     try {
-      const response = await AiChatService.updateStatus(id, status);
-      if (!response.success || !response.data) {
-        throw new Error(response.error || "Erreur lors de la mise à jour de la session de chat");
-      }
-      const updatedSession = response.data;
+      const updatedSession = await AiChatService.updateChatSession(sessionData);
       set(state => {
         // Mettre à jour la liste des sessions
         const updatedSessions = state.chatSessions.map(session => 
           session.id === updatedSession.id ? updatedSession : session
         );
+        
         // Mettre à jour la session courante si c'est celle qui a été modifiée
         const updatedCurrentSession = state.currentSession && state.currentSession.id === updatedSession.id
           ? updatedSession
           : state.currentSession;
+        
         return {
           chatSessions: updatedSessions,
           currentSession: updatedCurrentSession
         };
       });
+      
       return updatedSession;
     } catch (err) {
       const errorMessage = "Erreur lors de la mise à jour de la session de chat";
@@ -124,7 +119,7 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      await AiChatService.deleteSession(id);
+      await AiChatService.deleteChatSession(id);
       set(state => {
         // Filtrer la liste des sessions
         const filteredSessions = state.chatSessions.filter(session => session.id !== id);
