@@ -9,13 +9,14 @@ interface AuthState {
   isAuthenticated: boolean
   isLoading: boolean
   error: string | null
-  
+
   // Actions
   login: (email: string, password: string) => Promise<void>
   logout: () => void
   register: (email: string, password: string, name: string) => Promise<void>
   refreshToken: () => Promise<void>
   clearError: () => void
+  set: (state: Partial<AuthState>) => void
 }
 
 // Création du store avec persistance
@@ -28,6 +29,8 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
       error: null,
       
+      set: (newState) => set(newState),
+
       // Connexion utilisateur
       login: async (email: string, password: string) => {
         set({ isLoading: true, error: null })

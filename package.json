@@ -6,8 +6,41 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "electron": "electron main.js",
+    "dist": "electron-builder",
+    "export": "next export"
   },
+  "build": {
+    "appId": "com.tonapp.skillup",
+    "productName": "SkillUp",
+    "files": [
+      "main.js",
+      "package.json",
+      "public/**/*",
+      ".next/**/*",
+      "node_modules/**/*"
+    ],
+    "directories": {
+      "buildResources": "public"
+    },
+    "win": {
+      "icon": "public/skillup-icon.ico"
+    },
+    "extraResources": [
+      {
+        "from": ".next",
+        "to": ".next"
+      },
+      {
+        "from": "node_modules",
+        "to": "node_modules"
+      }
+    ]
+  },
+  "main": "main.js",
+  "author": "Salif Biaye",
+  "description": "SkillUp est une application Electron qui permet de calculer le nombre de canaux nécessaires pour une simulation de trafic.",
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-accordion": "1.2.2",
@@ -51,9 +84,9 @@
     "md-to-pdf": "^5.2.4",
     "next": "15.2.4",
     "next-themes": "latest",
-    "react": "^19",
+    "react": "^18.3.1",
     "react-day-picker": "8.10.1",
-    "react-dom": "^19",
+    "react-dom": "^18.3.1",
     "react-hook-form": "^7.54.1",
     "react-markdown": "^10.1.0",
     "react-resizable-panels": "^2.1.7",
@@ -68,11 +101,24 @@
   },
   "devDependencies": {
     "@types/js-cookie": "^3.0.6",
-    "@types/node": "^22",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@types/node": "^22.16.0",
+    "@types/react": "^18.2.69",
+    "@types/react-dom": "^18.2.22",
+    "electron": "^37.2.0",
+    "electron-builder": "^26.0.12",
     "postcss": "^8",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron"
+    ],
+    "ignoredBuiltDependencies": [
+      "core-js",
+      "electron-winstaller",
+      "puppeteer",
+      "sharp"
+    ]
   }
 }

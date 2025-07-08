@@ -6,8 +6,10 @@ const publicRoutes = ["/", "/login", "/register", "/forgot-password"]
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-  const origin = request.nextUrl.origin
+  const origin = process.env.NEXT_PUBLIC_ORIGIN || request.nextUrl.origin;
+
   // Vérifier si la route est publique
+
   const isPublicRoute = publicRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`))
 
   // Vérifier l'authentification en utilisant le token JWT du cookie
@@ -17,12 +19,15 @@ export function middleware(request: NextRequest) {
   // Si la route n'est pas publique et l'utilisateur n'est pas authentifié, rediriger vers la page de connexion
   if (!isPublicRoute && !isAuthenticated) {
     // Utiliser explicitement l'origine de la requête pour la redirection
-    const loginUrl = new URL("/login", origin)
-    return NextResponse.redirect(loginUrl)
+    // Redirection absolue obligatoire pour Next.js middleware
+    return NextResponse.redirect(new URL("/login", origin));
   }
 
   // Si l'utilisateur est authentifié et essaie d'accéder à une page de connexion/inscription, rediriger vers le tableau de bord
   if (isAuthenticated && (pathname === "/login" || pathname === "/register")) {
+    // Redirection absolue obligatoire pour Next.js middleware
+    return NextResponse.redirect(new URL("/dashboard", origin));
+  
     // Utiliser explicitement l'origine de la requête pour la redirection
     const dashboardUrl = new URL("/dashboard", origin)
     return NextResponse.redirect(dashboardUrl)
