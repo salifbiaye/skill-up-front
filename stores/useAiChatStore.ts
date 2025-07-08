@@ -62,19 +62,21 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
 
   createChatSession: async (sessionData: CreateChatSessionInput) => {
     set({ isLoading: true, error: null });
-    
     try {
-      const newSession = await AiChatService.createChatSession(sessionData);
-
-      set(state => ({ 
-        chatSessions: [...state.chatSessions, newSession],
-        currentSession: newSession
+      // On suppose que CreateChatSessionInput contient un champ 'title'
+      const result = await AiChatService.createSession(sessionData.title);
+      if (!result.success || !result.data) {
+        const errorMessage = result.error || "Erreur lors de la création de la session de chat";
+        set({ error: errorMessage });
+        throw new Error(errorMessage);
+      }
+      set(state => ({
+        chatSessions: [...state.chatSessions, result.data!],
+        currentSession: result.data!
       }));
-
-      return newSession;
+      return result.data!;
     } catch (err) {
       const errorMessage = "Erreur lors de la création de la session de chat";
-
       set({ error: errorMessage });
       throw err;
     } finally {
@@ -119,7 +121,7 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      await AiChatService.deleteChatSession(id);
+      await AiChatService.deleteSession(id);
       set(state => {
         // Filtrer la liste des sessions
         const filteredSessions = state.chatSessions.filter(session => session.id !== id);
@@ -191,24 +193,34 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
         };
       });
       
-      // Obtenir la réponse de l'assistant en passant l'ID du message au lieu du contenu
-      const assistantMessage = await AiChatService.getAssistantResponse(
+      // Obtenir la réponse de l'IA via l'API backend
+      const aiResponseResult = await AiChatService.getAiResponse(
         messageData.sessionId,
-        userMessage.id, // Utiliser l'ID du message au lieu du contenu
-        messageData.type,
-        messageData.metadata
+        userMessage.id // ID du message utilisateur
       );
-      
+
+      let assistantMessage = null;
+      if (aiResponseResult.success && aiResponseResult.data) {
+        assistantMessage = aiResponseResult.data;
+      } else {
+        assistantMessage = {
+          id: Date.now().toString(),
+          sessionId: messageData.sessionId,
+          content: aiResponseResult.error || "Erreur lors de la réponse IA",
+          role: "assistant",
+          timestamp: new Date().toISOString(),
+          type: userMessage.type,
+          metadata: userMessage.metadata,
+        };
+      }
+
       // Mettre à jour la session avec la réponse de l'assistant
       set(state => {
-        // Mettre à jour toutes les sessions, pas seulement la session courante
         const updatedSessions = state.chatSessions.map(session => {
           if (session.id === messageData.sessionId) {
-            // Vérification robuste pour s'assurer que messages est un tableau
-            const currentMessages = Array.isArray(session.messages) 
-              ? session.messages 
+            const currentMessages = Array.isArray(session.messages)
+              ? session.messages
               : [];
-            
             return {
               ...session,
               messages: [...currentMessages, assistantMessage],
@@ -217,8 +229,6 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
           }
           return session;
         });
-        
-        // Mettre à jour la session courante si c'est celle qui a été modifiée
         const updatedCurrentSession = state.currentSession && state.currentSession.id === messageData.sessionId
           ? {
               ...state.currentSession,
@@ -226,7 +236,6 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
               updatedAt: new Date().toISOString(),
             }
           : state.currentSession;
-        
         return {
           chatSessions: updatedSessions,
           currentSession: updatedCurrentSession

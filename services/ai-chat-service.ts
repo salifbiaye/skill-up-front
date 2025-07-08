@@ -119,14 +119,14 @@ export const AiChatService = {
   /**
    * Obtient une réponse de l'IA
    */
-  async getAiResponse(sessionId: string, message: string): Promise<{ success: boolean; data?: ChatMessage; error?: string }> {
+  async getAiResponse(sessionId: string, messageId: string): Promise<{ success: boolean; data?: ChatMessage; error?: string }> {
     try {
       const response = await fetch(`/api/chat-sessions/${sessionId}/ai-response`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ messageId }),
       });
       
       if (!response.ok) {
